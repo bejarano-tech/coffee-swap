@@ -62,11 +62,11 @@ export const DexAggregator = () => {
 
   useEffect(() => {
     if(direction == 'fromTo'){
-      setToAmount(quotedAmountOut)
+      setToAmount(quotedAmountOut == '0' ? '' : quotedAmountOut)
     }else {
-      setFromAmount(quotedAmountOut)
+      setFromAmount(quotedAmountOut == '0' ? '' : quotedAmountOut)
     }
-  }, [quotedAmountOut])
+  }, [direction, quotedAmountOut])
 
 
   const handleSwap = async () => {};
@@ -86,8 +86,8 @@ export const DexAggregator = () => {
     setToToken("0xa000000000000000000000000000000000000000")
     setFromToken(value)
     setToToken(from)
-    setFromAmount("0")
-    setToAmount("0")
+    setFromAmount("")
+    setToAmount("")
   }
 
   const handleToTokenChange = (value: string) => {
@@ -95,8 +95,8 @@ export const DexAggregator = () => {
     setFromToken("0xa000000000000000000000000000000000000000")
     setToToken(value)
     setFromToken(to)
-    setFromAmount("0")
-    setToAmount("0")
+    setFromAmount("")
+    setToAmount("")
   }
 
   return (
