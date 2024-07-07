@@ -13,6 +13,8 @@ import {
 } from "./ui/select";
 import { Label } from "./ui/label";
 import { Button } from "./ui/button";
+import { handleSushiSwapQuote } from "@/app/actions";
+import { formatNumber } from "@/lib/format";
 
 interface Dex {
   address: string;
@@ -43,7 +45,7 @@ export const DexAggregator = () => {
   const [fromAmount, setFromAmount] = useState("");
   const [toAmount, setToAmount] = useState("");
   const [direction, setDirection] = useState("fromTo");
-
+  const [reverse, setReverse] = useState(false)
   const amount = direction === 'fromTo' ? fromAmount : toAmount
 
   const fromTokenZeroCount = tokenList.find(token => token.address === fromToken)?.zeroCount || 18;
@@ -52,7 +54,7 @@ export const DexAggregator = () => {
   const fromTokenDecimals = tokenList.find(token => token.address === fromToken)?.decimals || 18;
   const toTokenDecimals = tokenList.find(token => token.address === toToken)?.decimals || 18;
 
-  const { quotedAmountOut } = useQuote(
+  const { quotedAmountOut: uniswapPrice } = useQuote(
     (direction === 'fromTo' ? fromToken : toToken),
     (direction === 'fromTo' ? toToken : fromToken),
     parseInt(amount || "0"),
@@ -61,12 +63,32 @@ export const DexAggregator = () => {
   );
 
   useEffect(() => {
-    if(direction == 'fromTo'){
-      setToAmount(quotedAmountOut == '0' ? '' : quotedAmountOut)
-    }else {
-      setFromAmount(quotedAmountOut == '0' ? '' : quotedAmountOut)
+    const updateViews = async () => {
+      const sushiSwapPrice = await handleSushiSwapQuote(amount, direction, reverse)
+      
+      const bestPrice = Math.min(uniswapPrice, sushiSwapPrice)
+      console.log(bestPrice)
+      console.log({uniswapPrice})
+      console.log({sushiSwapPrice})
+      if (bestPrice == 0) {
+        return
+      }
+      if (direction == 'fromTo') {
+          setToAmount(formatNumber(bestPrice, toTokenDecimals))
+      } else {
+        setFromAmount(formatNumber(bestPrice, fromTokenDecimals))
+      }
     }
-  }, [direction, quotedAmountOut])
+    updateViews()
+  }, [amount, direction, fromTokenDecimals, reverse, toTokenDecimals, uniswapPrice])
+
+  // useEffect(() => {
+  //   if(direction == 'fromTo'){
+  //     setToAmount(quotedAmountOut == '0' ? '' : quotedAmountOut)
+  //   }else {
+  //     setFromAmount(quotedAmountOut == '0' ? '' : quotedAmountOut)
+  //   }
+  // }, [direction, quotedAmountOut])
 
 
   const handleSwap = async () => {};
@@ -88,6 +110,7 @@ export const DexAggregator = () => {
     setToToken(from)
     setFromAmount("")
     setToAmount("")
+    setReverse(!reverse)
   }
 
   const handleToTokenChange = (value: string) => {
@@ -97,6 +120,7 @@ export const DexAggregator = () => {
     setFromToken(to)
     setFromAmount("")
     setToAmount("")
+    setReverse(!reverse)
   }
 
   return (
@@ -137,7 +161,7 @@ export const DexAggregator = () => {
             </Select>
           </div>
           <Button
-            disabled={quotedAmountOut === '0'}
+            // disabled={quotedAmountOut === '0'}
             onClick={handleSwap}
             className="w-full bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
           >

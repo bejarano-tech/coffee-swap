@@ -1,5 +1,6 @@
 import { QUOTER_CONTRACT_ADDRESS } from "@/lib/constants";
 import { fromReadableAmount } from "@/lib/conversion";
+import { adjustNumber } from "@/lib/format";
 import Quoter from "@uniswap/v3-periphery/artifacts/contracts/lens/Quoter.sol/Quoter.json";
 import { FeeAmount } from "@uniswap/v3-sdk";
 import { useSimulateContract } from "wagmi";
@@ -30,23 +31,7 @@ export const useQuote = (
     ],
   });
 
-  const amount = data?.result ? formatNumber(Number(data?.result || 0), zeroCount, decimals) : "0";
+  const amount = data?.result ? adjustNumber(Number(data?.result || 0), zeroCount) : 0;
 
   return { quotedAmountOut: amount, isLoading };
 };
-
-function formatNumber(input: number, zeroCount: number, decimals: number = 0) {
-  // Crear el factor de multiplicación basado en la cantidad de ceros decimales
-  const multiplyBy = 1 / Math.pow(10, zeroCount);
-
-  // Multiplicar el número según el factor calculado
-  const number = input * multiplyBy;
-
-  // Formatear el número con dos decimales y separadores de miles
-  const formattedNumber = number.toLocaleString("en-US", {
-    minimumFractionDigits: decimals,
-    maximumFractionDigits: decimals,
-  });
-
-  return formattedNumber;
-}
