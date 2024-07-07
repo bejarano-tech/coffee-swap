@@ -47,7 +47,7 @@ export const DexAggregator = () => {
   const [direction, setDirection] = useState("fromTo");
   const [reverse, setReverse] = useState(false)
   const [bestDex, setBestDex] = useState("");
-  const amount = direction === 'fromTo' ? fromAmount : toAmount
+  const [amount, setAmount] = useState("0");
 
   const fromTokenZeroCount = tokenList.find(token => token.address === fromToken)?.zeroCount || 18;
   const toTokenZeroCount = tokenList.find(token => token.address === toToken)?.zeroCount || 18;
@@ -58,7 +58,7 @@ export const DexAggregator = () => {
   const { quotedAmountOut: uniswapPrice } = useQuote(
     (direction === 'fromTo' ? fromToken : toToken),
     (direction === 'fromTo' ? toToken : fromToken),
-    parseInt(amount || "0"),
+    parseFloat(amount || "0"),
     direction === 'fromTo' ? toTokenZeroCount : fromTokenZeroCount,
     direction === 'fromTo' ? toTokenDecimals : fromTokenDecimals,
   );
@@ -68,17 +68,10 @@ export const DexAggregator = () => {
       const sushiSwapPrice = await handleSushiSwapQuote(amount, direction, reverse)
       
       const bestPrice = Math.min(uniswapPrice, sushiSwapPrice)
-      console.log(bestPrice)
-      console.log({uniswapPrice})
-      console.log({sushiSwapPrice})
       if (bestPrice == 0) {
         return
       }
       let bestDexName = "";
-
-      if (bestPrice === 0) {
-        return;
-      }
       if (bestPrice === uniswapPrice) {
         bestDexName = "Uniswap";
       } else {
@@ -95,13 +88,9 @@ export const DexAggregator = () => {
     updateViews()
   }, [amount, direction, fromTokenDecimals, reverse, toTokenDecimals, uniswapPrice])
 
-  // useEffect(() => {
-  //   if(direction == 'fromTo'){
-  //     setToAmount(quotedAmountOut == '0' ? '' : quotedAmountOut)
-  //   }else {
-  //     setFromAmount(quotedAmountOut == '0' ? '' : quotedAmountOut)
-  //   }
-  // }, [direction, quotedAmountOut])
+  useEffect(() => {
+    setAmount((direction === 'fromTo') ? fromAmount : toAmount)
+  }, [fromAmount, toAmount])
 
 
   const handleSwap = async () => {};
@@ -181,6 +170,9 @@ export const DexAggregator = () => {
               </SelectContent>
             </Select>
           </div>
+          <div className="mt-4">
+            <p>Best price found on: {bestDex}</p>
+          </div>
           <Button
             // disabled={quotedAmountOut === '0'}
             onClick={handleSwap}
@@ -188,9 +180,6 @@ export const DexAggregator = () => {
           >
             Swap
           </Button>
-          <div className="mt-4">
-            <p>Best price found on: {bestDex}</p>
-          </div>
         </div>
       ) : (
         <ConnectButton />
