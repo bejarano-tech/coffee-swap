@@ -13,14 +13,14 @@ export const useQuote = (
   decimals: number
 ) => {
   const adjustedAmount =
-    tokenIn == "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48"
+    tokenIn == "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2"
       ? fromReadableAmount(amountIn, 18)
       : BigInt(amountIn);
 
   const { data, isLoading, error } = useSimulateContract({
     abi: Quoter.abi,
     address: QUOTER_CONTRACT_ADDRESS,
-    functionName: "quoteExactOutputSingle",
+    functionName: "quoteExactInputSingle",
     args: [tokenIn, tokenOut, FeeAmount.MEDIUM, adjustedAmount, 0],
   });
 

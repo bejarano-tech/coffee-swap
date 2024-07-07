@@ -25,14 +25,14 @@ const tokenList = [
   {
     name: "Wrapped Ether",
     symbol: "WETH",
-    address: "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
+    address: "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
     zeroCount: 12,
     decimals: 6
   },
   {
     name: "USD//C",
     symbol: "USDC",
-    address: "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
+    address: "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
     zeroCount: 6,
     decimals: 2
   }
