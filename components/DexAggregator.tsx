@@ -108,13 +108,17 @@ export const DexAggregator = () => {
 
   const handleFromAmountChange = (event: { target: { value: SetStateAction<string>; }; }) => {
     setDirection('fromTo')
-    setFromAmount(event.target.value)
+    const { value } = event.target
+    const formated = (value as string).split(',').join('')
+    setFromAmount(formated)
     setBestDex("")
   }
 
   const handleToAmountChange = (event: { target: { value: SetStateAction<string>; }; }) => {
     setDirection('toFrom')
-    setToAmount(event.target.value)
+    const { value } = event.target
+    const formated = (value as string).split(',').join('')
+    setToAmount(formated)
     setBestDex("")
   }
 
