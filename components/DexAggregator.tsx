@@ -55,7 +55,7 @@ export const DexAggregator = () => {
   const fromTokenDecimals = tokenList.find(token => token.address === fromToken)?.decimals || 18;
   const toTokenDecimals = tokenList.find(token => token.address === toToken)?.decimals || 18;
 
-  const { quotedAmountOut: uniswapPrice } = useQuote(
+  const { quotedAmountOut: uniswapPrice, isLoading } = useQuote(
     (direction === 'fromTo' ? fromToken : toToken),
     (direction === 'fromTo' ? toToken : fromToken),
     parseFloat(amount || "0"),
@@ -170,8 +170,8 @@ export const DexAggregator = () => {
               </SelectContent>
             </Select>
           </div>
-          <div className="mt-4">
-            <p>Best price found on: {bestDex}</p>
+          <div className="my-4">
+            <p>{`Best price found on: ${isLoading ? 'Loading...': bestDex}`}</p>
           </div>
           <Button
             // disabled={quotedAmountOut === '0'}
