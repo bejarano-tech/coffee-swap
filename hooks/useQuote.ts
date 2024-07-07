@@ -12,7 +12,6 @@ export const useQuote = (
   zeroCount: number,
   decimals: number
 ) => {
-
   const adjustedAmount =
     tokenIn == "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48"
       ? fromReadableAmount(amountIn, 18)
@@ -22,16 +21,12 @@ export const useQuote = (
     abi: Quoter.abi,
     address: QUOTER_CONTRACT_ADDRESS,
     functionName: "quoteExactOutputSingle",
-    args: [
-      tokenIn,
-      tokenOut,
-      FeeAmount.MEDIUM,
-      adjustedAmount,
-      0,
-    ],
+    args: [tokenIn, tokenOut, FeeAmount.MEDIUM, adjustedAmount, 0],
   });
 
-  const amount = data?.result ? adjustNumber(Number(data?.result || 0), zeroCount) : 0;
+  const amount = data?.result
+    ? adjustNumber(Number(data?.result || 0), zeroCount)
+    : 0;
 
   return { quotedAmountOut: amount, isLoading };
 };

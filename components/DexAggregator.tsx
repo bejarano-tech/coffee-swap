@@ -46,6 +46,7 @@ export const DexAggregator = () => {
   const [toAmount, setToAmount] = useState("");
   const [direction, setDirection] = useState("fromTo");
   const [reverse, setReverse] = useState(false)
+  const [bestDex, setBestDex] = useState("");
   const amount = direction === 'fromTo' ? fromAmount : toAmount
 
   const fromTokenZeroCount = tokenList.find(token => token.address === fromToken)?.zeroCount || 18;
@@ -73,6 +74,18 @@ export const DexAggregator = () => {
       if (bestPrice == 0) {
         return
       }
+      let bestDexName = "";
+
+      if (bestPrice === 0) {
+        return;
+      }
+      if (bestPrice === uniswapPrice) {
+        bestDexName = "Uniswap";
+      } else {
+        bestDexName = "SushiSwap";
+      }
+
+      setBestDex(bestDexName);
       if (direction == 'fromTo') {
           setToAmount(formatNumber(bestPrice, toTokenDecimals))
       } else {
@@ -96,11 +109,13 @@ export const DexAggregator = () => {
   const handleFromAmountChange = (event: { target: { value: SetStateAction<string>; }; }) => {
     setDirection('fromTo')
     setFromAmount(event.target.value)
+    setBestDex("")
   }
 
   const handleToAmountChange = (event: { target: { value: SetStateAction<string>; }; }) => {
     setDirection('toFrom')
     setToAmount(event.target.value)
+    setBestDex("")
   }
 
   const handleFromTokenChange = (value: string) => {
@@ -111,6 +126,7 @@ export const DexAggregator = () => {
     setFromAmount("")
     setToAmount("")
     setReverse(!reverse)
+    setBestDex("")
   }
 
   const handleToTokenChange = (value: string) => {
@@ -121,6 +137,7 @@ export const DexAggregator = () => {
     setFromAmount("")
     setToAmount("")
     setReverse(!reverse)
+    setBestDex("")
   }
 
   return (
@@ -167,6 +184,9 @@ export const DexAggregator = () => {
           >
             Swap
           </Button>
+          <div className="mt-4">
+            <p>Best price found on: {bestDex}</p>
+          </div>
         </div>
       ) : (
         <ConnectButton />
