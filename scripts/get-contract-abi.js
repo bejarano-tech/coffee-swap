@@ -4,13 +4,13 @@ const path = require('path');
 async function main() {
 
   // make an API call to the ABIs endpoint 
-  const response = await fetch(`https://api.etherscan.io/api?module=contract&action=getabi&address=0x118629329731ce1FF01f9401212C53939F8A9EEB&apikey=${process.env.ETHSCAN_API_KEY}`);
+  const response = await fetch(`https://api.etherscan.io/api?module=contract&action=getabi&address=0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2&apikey=${process.env.ETHSCAN_API_KEY}`);
   const data = await response.json();
 
   // print the JSON response 
   let abi = data.result;
 
-  const filePath = path.resolve(__dirname, 'pool.json');
+  const filePath = path.resolve(__dirname, 'ERC_20.json');
 
   const jsonData = abi;
 

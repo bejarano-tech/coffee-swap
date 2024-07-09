@@ -1,6 +1,6 @@
 "use client";
-import { SetStateAction, useEffect, useState } from "react";
-import { useAccount } from "wagmi";
+import { SetStateAction, useCallback, useEffect, useState } from "react";
+import { useAccount, useCall } from "wagmi";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { useQuote } from "@/hooks/useQuote";
 import { Input } from "./ui/input";
@@ -15,11 +15,16 @@ import { Label } from "./ui/label";
 import { Button } from "./ui/button";
 import { handleSushiSwapQuote } from "@/app/actions";
 import { formatNumber } from "@/lib/format";
-
-interface Dex {
-  address: string;
-  abi: any[];
-}
+import { SwapRoute } from "@uniswap/smart-order-router";
+import { SWAP_ROUTER_ADDRESS, TOKEN_AMOUNT_TO_APPROVE_FOR_TRANSFER, USDC_TOKEN, WETH_TOKEN } from "@/lib/constants";
+import { useCreateRoute } from "@/hooks/useCreateRoute";
+import { useCreateTrade } from "@/hooks/useCreateTrade";
+import { useApprove } from "@/hooks/useApprove";
+import { ERC20_ABI } from "@/blockchain/abis/ERC_20";
+import { fromReadableAmount } from "@/lib/conversion";
+import { Trade } from "@uniswap/v3-sdk";
+import { Token, TradeType } from "@uniswap/sdk-core";
+import { useExecuteTrade } from "@/hooks/useExecuteTrade";
 
 const tokenList = [
   {
@@ -39,7 +44,7 @@ const tokenList = [
 ];
 
 export const DexAggregator = () => {
-  const { isConnected } = useAccount();
+  const { isConnected, address, chainId } = useAccount();
   const [fromToken, setFromToken] = useState(tokenList[0].address);
   const [toToken, setToToken] = useState(tokenList[1].address);
   const [fromAmount, setFromAmount] = useState("");
@@ -48,6 +53,8 @@ export const DexAggregator = () => {
   const [reverse, setReverse] = useState(false)
   const [bestDex, setBestDex] = useState("");
   const [amount, setAmount] = useState("0");
+  const [route, setRoute] = useState<SwapRoute | null>(null)
+  const [trade, setTrade] = useState<Trade<Token, Token, TradeType.EXACT_INPUT> | null>(null)
 
   const fromTokenZeroCount = tokenList.find(token => token.address === fromToken)?.zeroCount || 18;
   const toTokenZeroCount = tokenList.find(token => token.address === toToken)?.zeroCount || 18;
@@ -92,9 +99,6 @@ export const DexAggregator = () => {
     setAmount((direction === 'fromTo') ? fromAmount : toAmount)
   }, [fromAmount, toAmount])
 
-
-  const handleSwap = async () => {};
-
   const handleFromAmountChange = (event: { target: { value: SetStateAction<string>; }; }) => {
     setDirection('fromTo')
     const { value } = event.target
@@ -132,6 +136,33 @@ export const DexAggregator = () => {
     setReverse(!reverse)
     setBestDex("")
   }
+
+  const { calldata, swapRoute }  = useCreateRoute(WETH_TOKEN, USDC_TOKEN, parseFloat(amount || "0"))
+  const { getTrade } = useCreateTrade(calldata as string, swapRoute, parseFloat(amount || "0"))
+  const { approve, error, isConfirmed } = useApprove(WETH_TOKEN)
+  const handleSwap = useCallback(async () => {
+    setTrade(getTrade()) 
+    console.log(trade)
+    approve({
+      address: WETH_TOKEN.address as `0x${string}`,
+      abi: ERC20_ABI,
+      functionName: 'approve',
+      args: [SWAP_ROUTER_ADDRESS, fromReadableAmount(
+        TOKEN_AMOUNT_TO_APPROVE_FOR_TRANSFER,
+        WETH_TOKEN.decimals
+      ).toString()]
+    })
+    // const route = await getRoute()
+    // console.log(route)
+  }, [approve, getTrade])
+
+  const { executeTrade } = useExecuteTrade(trade, address)
+
+  useEffect(() => {
+    if(isConfirmed){
+      executeTrade()
+    }
+  }, [isConfirmed])
 
   return (
     <main className="flex-grow flex items-center justify-center p-4">
