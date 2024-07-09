@@ -1,6 +1,6 @@
 "use client";
 import { SetStateAction, useCallback, useEffect, useState } from "react";
-import { useAccount, useCall } from "wagmi";
+import { useAccount, useBalance, useCall, useReadContract } from "wagmi";
 import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { useQuote } from "@/hooks/useQuote";
 import { Input } from "./ui/input";
@@ -14,8 +14,7 @@ import {
 import { Label } from "./ui/label";
 import { Button } from "./ui/button";
 import { handleSushiSwapQuote } from "@/app/actions";
-import { formatNumber } from "@/lib/format";
-import { SwapRoute } from "@uniswap/smart-order-router";
+import { adjustNumber, formatNumber } from "@/lib/format";
 import { SWAP_ROUTER_ADDRESS, TOKEN_AMOUNT_TO_APPROVE_FOR_TRANSFER, USDC_TOKEN, WETH_TOKEN } from "@/lib/constants";
 import { useCreateRoute } from "@/hooks/useCreateRoute";
 import { useCreateTrade } from "@/hooks/useCreateTrade";
@@ -25,6 +24,8 @@ import { fromReadableAmount } from "@/lib/conversion";
 import { Trade } from "@uniswap/v3-sdk";
 import { Token, TradeType } from "@uniswap/sdk-core";
 import { useExecuteTrade } from "@/hooks/useExecuteTrade";
+import useWETH from "@/hooks/useWETH";
+import { format } from "path";
 
 const tokenList = [
   {
@@ -45,6 +46,9 @@ const tokenList = [
 
 export const DexAggregator = () => {
   const { isConnected, address, chainId } = useAccount();
+  const { data: ethBalance } = useBalance({
+    address,
+  });
   const [fromToken, setFromToken] = useState(tokenList[0].address);
   const [toToken, setToToken] = useState(tokenList[1].address);
   const [fromAmount, setFromAmount] = useState("");
@@ -53,7 +57,6 @@ export const DexAggregator = () => {
   const [reverse, setReverse] = useState(false)
   const [bestDex, setBestDex] = useState("");
   const [amount, setAmount] = useState("0");
-  const [route, setRoute] = useState<SwapRoute | null>(null)
   const [trade, setTrade] = useState<Trade<Token, Token, TradeType.EXACT_INPUT> | null>(null)
 
   const fromTokenZeroCount = tokenList.find(token => token.address === fromToken)?.zeroCount || 18;
@@ -69,6 +72,20 @@ export const DexAggregator = () => {
     direction === 'fromTo' ? toTokenZeroCount : fromTokenZeroCount,
     direction === 'fromTo' ? toTokenDecimals : fromTokenDecimals,
   );
+
+  const { data: usdcBalance } = useReadContract({
+    address: USDC_TOKEN.address as `0x${string}`,
+    abi: ERC20_ABI,
+    functionName: 'balanceOf',
+    args: [address],
+  });
+
+  const { data: wethBalance } = useReadContract({
+    address: WETH_TOKEN.address as `0x${string}`,
+    abi: ERC20_ABI,
+    functionName: 'balanceOf',
+    args: [address],
+  });
 
   useEffect(() => {
     const updateViews = async () => {
@@ -140,21 +157,21 @@ export const DexAggregator = () => {
   const { calldata, swapRoute }  = useCreateRoute(WETH_TOKEN, USDC_TOKEN, parseFloat(amount || "0"))
   const { getTrade } = useCreateTrade(calldata as string, swapRoute, parseFloat(amount || "0"))
   const { approve, error, isConfirmed } = useApprove(WETH_TOKEN)
+  const { deposit, error: depositError, isSuccess: isDeposited } = useWETH()
+
   const handleSwap = useCallback(async () => {
-    setTrade(getTrade()) 
-    console.log(trade)
-    approve({
+    setTrade(getTrade())
+    await deposit(parseFloat(amount || "0"))
+    await approve({
       address: WETH_TOKEN.address as `0x${string}`,
       abi: ERC20_ABI,
       functionName: 'approve',
       args: [SWAP_ROUTER_ADDRESS, fromReadableAmount(
-        TOKEN_AMOUNT_TO_APPROVE_FOR_TRANSFER,
+        parseFloat(amount || '0'),
         WETH_TOKEN.decimals
       ).toString()]
     })
-    // const route = await getRoute()
-    // console.log(route)
-  }, [approve, getTrade])
+  }, [amount, approve, deposit, getTrade])
 
   const { executeTrade } = useExecuteTrade(trade, address)
 
@@ -204,6 +221,9 @@ export const DexAggregator = () => {
           <div className="my-4">
             <p>{`Best price found on: ${isLoading ? 'Loading...': bestDex}`}</p>
           </div>
+          <p>ETH: {adjustNumber(Number(ethBalance?.value || 0), 18)}</p>
+          <p>WETH: {adjustNumber(Number(wethBalance || 0), 12)}</p>
+          <p>USDC: {adjustNumber(Number(usdcBalance || 0), 6)}</p>
           <Button
             // disabled={quotedAmountOut === '0'}
             onClick={handleSwap}

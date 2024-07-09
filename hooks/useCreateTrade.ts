@@ -7,6 +7,7 @@ import { fromReadableAmount } from "@/lib/conversion";
 import { CurrencyAmount, Token, TradeType } from "@uniswap/sdk-core";
 import { Route, Trade } from "@uniswap/v3-sdk";
 import { AbiCoder } from "ethers";
+import JSBI from "jsbi";
 import { useCall } from "wagmi";
 
 export const useCreateTrade = (
@@ -25,7 +26,7 @@ export const useCreateTrade = (
     try {
       const abiCoder = AbiCoder.defaultAbiCoder();
       const decoded = abiCoder.decode(["uint256"], data?.data as `0x${string}`);
-    
+
       const uncheckedTrade = Trade.createUncheckedTrade({
         route: swapRoute as Route<Token, Token>,
         inputAmount: CurrencyAmount.fromRawAmount(
@@ -34,11 +35,11 @@ export const useCreateTrade = (
         ),
         outputAmount: CurrencyAmount.fromRawAmount(
           USDC_TOKEN,
-          fromReadableAmount(decoded[0] || 0, WETH_TOKEN.decimals).toString()
+          BigInt(decoded[0]).toString(),
         ),
         tradeType: TradeType.EXACT_INPUT,
       });
-  
+
       return uncheckedTrade
     } catch (error) {
       console.log(error)

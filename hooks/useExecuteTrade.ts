@@ -1,7 +1,7 @@
 import { MAX_FEE_PER_GAS, MAX_PRIORITY_FEE_PER_GAS, SWAP_ROUTER_ADDRESS } from "@/lib/constants"
 import { Percent, Token, TradeType } from "@uniswap/sdk-core"
 import { MethodParameters, SwapOptions, SwapRouter, Trade } from "@uniswap/v3-sdk"
-import { useCallback, useState } from "react"
+import { useCallback, useEffect, useState } from "react"
 import { useSendTransaction } from "wagmi"
 
 export const useExecuteTrade = (trade: Trade<Token, Token, TradeType.EXACT_INPUT> | null, address: `0x${string}` | undefined) => {
@@ -14,7 +14,7 @@ export const useExecuteTrade = (trade: Trade<Token, Token, TradeType.EXACT_INPUT
     recipient: address as string,
   }
   
-  const getMethodParams = useCallback(()=> {
+  useEffect(()=> {
     if(trade){
       setMethodParameters(SwapRouter.swapCallParameters([trade as Trade<Token, Token, TradeType.EXACT_INPUT>], options))
     }

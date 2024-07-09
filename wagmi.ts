@@ -21,7 +21,7 @@ export const config = getDefaultConfig({
     // optimism,
     // arbitrum,
     // base,
-    {...hardhat, id: 1},
+    { ...hardhat, id: 12 },
     ...(process.env.NEXT_PUBLIC_ENABLE_TESTNETS === 'true' ? [sepolia] : []),
   ],
   ssr: true,
