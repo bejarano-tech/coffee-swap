@@ -26,6 +26,7 @@ import { Token, TradeType } from "@uniswap/sdk-core";
 import { useExecuteTrade } from "@/hooks/useExecuteTrade";
 import useWETH from "@/hooks/useWETH";
 import { format } from "path";
+import { useSushiSwapQuote } from "@/hooks/useSushiSwapQuote";
 
 const tokenList = [
   {
@@ -55,7 +56,7 @@ export const DexAggregator = () => {
   const [toAmount, setToAmount] = useState("");
   const [direction, setDirection] = useState("fromTo");
   const [reverse, setReverse] = useState(false)
-  const [bestDex, setBestDex] = useState("");
+  const [bestDex, setBestDex] = useState<string | null>(null);
   const [amount, setAmount] = useState("0");
   const [trade, setTrade] = useState<Trade<Token, Token, TradeType.EXACT_INPUT> | null>(null)
 
@@ -65,12 +66,19 @@ export const DexAggregator = () => {
   const fromTokenDecimals = tokenList.find(token => token.address === fromToken)?.decimals || 18;
   const toTokenDecimals = tokenList.find(token => token.address === toToken)?.decimals || 18;
 
-  const { quotedAmountOut: uniswapPrice, isLoading } = useQuote(
+  const { quotedAmountOut: uniswapPrice, isLoading: isUniswapPriceLoading } = useQuote(
     (direction === 'fromTo' ? fromToken : toToken),
     (direction === 'fromTo' ? toToken : fromToken),
     parseFloat(amount || "0"),
     direction === 'fromTo' ? toTokenZeroCount : fromTokenZeroCount,
     direction === 'fromTo' ? toTokenDecimals : fromTokenDecimals,
+  );
+
+  const { quotedAmountOut: sushiSwapPrice, isLoading: isSushiSwapPriceLoading } = useSushiSwapQuote(
+    (direction === 'fromTo' ? fromToken : toToken),
+    (direction === 'fromTo' ? toToken : fromToken),
+    parseFloat(amount || "0"),
+    direction === 'fromTo' ? toTokenZeroCount : fromTokenZeroCount
   );
 
   const { data: usdcBalance } = useReadContract({
@@ -89,9 +97,9 @@ export const DexAggregator = () => {
 
   useEffect(() => {
     const updateViews = async () => {
-      const sushiSwapPrice = await handleSushiSwapQuote(amount, direction, reverse)
+      // const sushiSwapPrice = await handleSushiSwapQuote(amount, direction, reverse)
       
-      const bestPrice = Math.min(uniswapPrice, sushiSwapPrice)
+      const bestPrice = Math.max(uniswapPrice, sushiSwapPrice)
       if (bestPrice == 0) {
         return
       }
@@ -181,6 +189,15 @@ export const DexAggregator = () => {
     }
   }, [isConfirmed])
 
+  const swapButtonClass = () => {
+    if(!bestDex) {
+      return 'bg-yellow-600'
+    }
+    return bestDex == 'Uniswap' ? 'bg-pink-500' : 'bg-purple-600'
+  }
+
+  console.log({swap: swapButtonClass()})
+
   return (
     <main className="flex-grow flex items-center justify-center p-4">
       {isConnected ? (
@@ -219,7 +236,8 @@ export const DexAggregator = () => {
             </Select>
           </div>
           <div className="my-4">
-            <p>{`Best price found on: ${isLoading ? 'Loading...': bestDex}`}</p>
+            {isUniswapPriceLoading ? 'Sushiswap Loading': ''}
+            <p>{`Best price found on: ${isUniswapPriceLoading || isSushiSwapPriceLoading ? 'Loading...': bestDex}`}</p>
           </div>
           <p>ETH: {adjustNumber(Number(ethBalance?.value || 0), 18)}</p>
           <p>WETH: {adjustNumber(Number(wethBalance || 0), 12)}</p>
@@ -227,9 +245,9 @@ export const DexAggregator = () => {
           <Button
             // disabled={quotedAmountOut === '0'}
             onClick={handleSwap}
-            className="w-full bg-green-500 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className={`w-full ${swapButtonClass()} hover:bg-green-700 text-white font-bold py-2 px-4 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500`}
           >
-            Swap
+            Swap on {bestDex}
           </Button>
         </div>
       ) : (
