@@ -16,7 +16,7 @@ export const config = getDefaultConfig({
   appName: 'RainbowKit demo',
   projectId: 'YOUR_PROJECT_ID',
   chains: [
-    // mainnet,
+    mainnet,
     // polygon,
     // optimism,
     // arbitrum,

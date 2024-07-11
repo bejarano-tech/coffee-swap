@@ -239,6 +239,8 @@ export const DexAggregator = () => {
             {isUniswapPriceLoading ? 'Sushiswap Loading': ''}
             <p>{`Best price found on: ${isUniswapPriceLoading || isSushiSwapPriceLoading ? 'Loading...': bestDex}`}</p>
           </div>
+          <p>Uniswap Price: {uniswapPrice}</p>
+          <p>Sushiswap Price: {sushiSwapPrice}</p>
           <p>ETH: {adjustNumber(Number(ethBalance?.value || 0), 18)}</p>
           <p>WETH: {adjustNumber(Number(wethBalance || 0), 12)}</p>
           <p>USDC: {adjustNumber(Number(usdcBalance || 0), 6)}</p>

@@ -1,5 +1,5 @@
 import { CurrencyAmount, Token, TradeType } from "@uniswap/sdk-core"
-import { POOL_FACTORY_CONTRACT_ADDRESS, QUOTER_CONTRACT_ADDRESS } from '@/lib/constants';
+import { POOL_FACTORY_CONTRACT_ADDRESS } from '@/lib/constants';
 import { computePoolAddress, FeeAmount, Pool, Route, SwapQuoter } from "@uniswap/v3-sdk";
 import { http, useCall, useReadContract } from "wagmi";
 import IUniswapV3PoolABI from '@uniswap/v3-core/artifacts/contracts/interfaces/IUniswapV3Pool.sol/IUniswapV3Pool.json';

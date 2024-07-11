@@ -1,7 +1,7 @@
-import { QUOTER_CONTRACT_ADDRESS } from "@/lib/constants";
+import { QUOTER_CONTRACT_ADDRESS_V2 } from "@/lib/constants";
 import { fromReadableAmount } from "@/lib/conversion";
 import { adjustNumber } from "@/lib/format";
-import Quoter from "@uniswap/v3-periphery/artifacts/contracts/lens/Quoter.sol/Quoter.json";
+import QuoterV2 from "@uniswap/v3-periphery/artifacts/contracts/lens/QuoterV2.sol/QuoterV2.json";
 import { FeeAmount } from "@uniswap/v3-sdk";
 import { useSimulateContract } from "wagmi";
 
@@ -18,14 +18,14 @@ export const useQuote = (
       : BigInt(Number(amountIn.toString().split('.').join('')));
 
   const { data, isLoading, error } = useSimulateContract({
-    abi: Quoter.abi,
-    address: QUOTER_CONTRACT_ADDRESS,
+    abi: QuoterV2.abi,
+    address: QUOTER_CONTRACT_ADDRESS_V2,
     functionName: "quoteExactInputSingle",
-    args: [tokenIn, tokenOut, FeeAmount.MEDIUM, adjustedAmount, 0],
+    args: [{tokenIn, tokenOut, fee: FeeAmount.MEDIUM, amountIn: adjustedAmount, sqrtPriceLimitX96: 0}],
   });
 
   const amount = data?.result
-    ? adjustNumber(Number(data?.result || 0), zeroCount)
+    ? adjustNumber(Number(data?.result[0] || 0), zeroCount)
     : 0;
 
   return { quotedAmountOut: amount, isLoading };
