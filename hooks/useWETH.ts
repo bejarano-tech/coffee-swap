@@ -1,15 +1,15 @@
 import { ERC20_ABI } from "@/blockchain/abis/ERC_20";
 import { WETH_TOKEN } from "@/lib/constants";
-import { fromReadableAmount } from "@/lib/conversion";
+import { fromReadableAmount, toReadableAmount } from "@/lib/conversion";
+import { Token } from "@uniswap/sdk-core";
 import { useWaitForTransactionReceipt, useWriteContract } from "wagmi";
 
-const useWETH = () => {
+export const useWETH = (token: Token) => {
   const { writeContractAsync, error, data: hash } = useWriteContract()
   const { isLoading: isConfirming, isSuccess: isConfirmed } =
   useWaitForTransactionReceipt({
     hash,
   })
-
 
   const deposit = async (amountIn: number) => {
     await writeContractAsync({
@@ -20,7 +20,15 @@ const useWETH = () => {
     })
   }
 
-  return { deposit, isConfirming, isSuccess: isConfirmed, error }
-};
+  const withdraw = async (amountIn: number) => {
+    console.log({error})
+    await writeContractAsync({
+      address: WETH_TOKEN.address as `0x${string}`,
+      abi: ERC20_ABI,
+      functionName: "withdraw",
+      args: [BigInt(amountIn)]
+    })
+  }
 
-export default useWETH;
+  return { deposit, withdraw, isConfirming, isSuccess: isConfirmed, error }
+};

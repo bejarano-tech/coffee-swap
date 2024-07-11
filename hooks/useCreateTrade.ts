@@ -1,19 +1,18 @@
 import {
-  QUOTER_CONTRACT_ADDRESS_V2,
-  USDC_TOKEN,
-  WETH_TOKEN,
+  QUOTER_CONTRACT_ADDRESS_V2
 } from "@/lib/constants";
 import { fromReadableAmount } from "@/lib/conversion";
 import { CurrencyAmount, Token, TradeType } from "@uniswap/sdk-core";
 import { Route, Trade } from "@uniswap/v3-sdk";
 import { AbiCoder } from "ethers";
-import JSBI from "jsbi";
 import { useCall } from "wagmi";
 
 export const useCreateTrade = (
+  tokenIn: Token,
+  tokenOut: Token,
   calldata: string,
   swapRoute: Route<Token, Token> | undefined,
-  amount: number
+  amount: number,
 ) => {
   const { data } = useCall({
     data:
@@ -30,11 +29,11 @@ export const useCreateTrade = (
       const uncheckedTrade = Trade.createUncheckedTrade({
         route: swapRoute as Route<Token, Token>,
         inputAmount: CurrencyAmount.fromRawAmount(
-          WETH_TOKEN,
-          fromReadableAmount(amount, WETH_TOKEN.decimals).toString()
+          tokenIn,
+          fromReadableAmount(amount, tokenIn.decimals).toString()
         ),
         outputAmount: CurrencyAmount.fromRawAmount(
-          USDC_TOKEN,
+          tokenOut,
           BigInt(decoded[0]).toString(),
         ),
         tradeType: TradeType.EXACT_INPUT,

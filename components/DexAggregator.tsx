@@ -13,9 +13,8 @@ import {
 } from "./ui/select";
 import { Label } from "./ui/label";
 import { Button } from "./ui/button";
-import { handleSushiSwapQuote } from "@/app/actions";
 import { adjustNumber, formatNumber } from "@/lib/format";
-import { SWAP_ROUTER_ADDRESS, TOKEN_AMOUNT_TO_APPROVE_FOR_TRANSFER, USDC_TOKEN, WETH_TOKEN } from "@/lib/constants";
+import { BLANK_TOKEN, ExtendedToken, SWAP_ROUTER_ADDRESS, tokenList, USDC_TOKEN, WETH_TOKEN } from "@/lib/constants";
 import { useCreateRoute } from "@/hooks/useCreateRoute";
 import { useCreateTrade } from "@/hooks/useCreateTrade";
 import { useApprove } from "@/hooks/useApprove";
@@ -24,34 +23,17 @@ import { fromReadableAmount } from "@/lib/conversion";
 import { Trade } from "@uniswap/v3-sdk";
 import { Token, TradeType } from "@uniswap/sdk-core";
 import { useExecuteTrade } from "@/hooks/useExecuteTrade";
-import useWETH from "@/hooks/useWETH";
+import { useWETH } from "@/hooks/useWETH";
 import { format } from "path";
 import { useSushiSwapQuote } from "@/hooks/useSushiSwapQuote";
-
-const tokenList = [
-  {
-    name: "Wrapped Ether",
-    symbol: "WETH",
-    address: "0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2",
-    zeroCount: 12,
-    decimals: 6
-  },
-  {
-    name: "USD//C",
-    symbol: "USDC",
-    address: "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
-    zeroCount: 6,
-    decimals: 2
-  }
-];
 
 export const DexAggregator = () => {
   const { isConnected, address, chainId } = useAccount();
   const { data: ethBalance } = useBalance({
     address,
   });
-  const [fromToken, setFromToken] = useState(tokenList[0].address);
-  const [toToken, setToToken] = useState(tokenList[1].address);
+  const [fromToken, setFromToken] = useState(tokenList[0]);
+  const [toToken, setToToken] = useState(tokenList[1]);
   const [fromAmount, setFromAmount] = useState("");
   const [toAmount, setToAmount] = useState("");
   const [direction, setDirection] = useState("fromTo");
@@ -60,18 +42,17 @@ export const DexAggregator = () => {
   const [amount, setAmount] = useState("0");
   const [trade, setTrade] = useState<Trade<Token, Token, TradeType.EXACT_INPUT> | null>(null)
 
-  const fromTokenZeroCount = tokenList.find(token => token.address === fromToken)?.zeroCount || 18;
-  const toTokenZeroCount = tokenList.find(token => token.address === toToken)?.zeroCount || 18;
+  const fromTokenZeroCount = tokenList.find(token => token.address === fromToken.address)?.zeroCount || 18;
+  const toTokenZeroCount = tokenList.find(token => token.address === toToken.address)?.zeroCount || 18;
 
-  const fromTokenDecimals = tokenList.find(token => token.address === fromToken)?.decimals || 18;
-  const toTokenDecimals = tokenList.find(token => token.address === toToken)?.decimals || 18;
+  const fromTokenDecimals = tokenList.find(token => token.address === fromToken.address)?.decimals || 18;
+  const toTokenDecimals = tokenList.find(token => token.address === toToken.address)?.decimals || 18;
 
   const { quotedAmountOut: uniswapPrice, isLoading: isUniswapPriceLoading } = useQuote(
     (direction === 'fromTo' ? fromToken : toToken),
     (direction === 'fromTo' ? toToken : fromToken),
     parseFloat(amount || "0"),
-    direction === 'fromTo' ? toTokenZeroCount : fromTokenZeroCount,
-    direction === 'fromTo' ? toTokenDecimals : fromTokenDecimals,
+    direction === 'fromTo' ? toTokenZeroCount : fromTokenZeroCount
   );
 
   const { quotedAmountOut: sushiSwapPrice, isLoading: isSushiSwapPriceLoading } = useSushiSwapQuote(
@@ -97,7 +78,6 @@ export const DexAggregator = () => {
 
   useEffect(() => {
     const updateViews = async () => {
-      // const sushiSwapPrice = await handleSushiSwapQuote(amount, direction, reverse)
       
       const bestPrice = Math.max(uniswapPrice, sushiSwapPrice)
       if (bestPrice == 0) {
@@ -127,14 +107,20 @@ export const DexAggregator = () => {
   const handleFromAmountChange = (event: { target: { value: SetStateAction<string>; }; }) => {
     setDirection('fromTo')
     const { value } = event.target
+    if(value == '' || value =='0'){
+      setToAmount('')
+    }
     const formated = (value as string).split(',').join('')
     setFromAmount(formated)
     setBestDex("")
   }
-
+  
   const handleToAmountChange = (event: { target: { value: SetStateAction<string>; }; }) => {
     setDirection('toFrom')
     const { value } = event.target
+    if(value == '' || value =='0'){
+      setFromAmount('')
+    }
     const formated = (value as string).split(',').join('')
     setToAmount(formated)
     setBestDex("")
@@ -142,8 +128,9 @@ export const DexAggregator = () => {
 
   const handleFromTokenChange = (value: string) => {
     const from = fromToken;
-    setToToken("0xa000000000000000000000000000000000000000")
-    setFromToken(value)
+    const to = tokenList.find(token => token.address === value)
+    setToToken(BLANK_TOKEN)
+    setFromToken(to as ExtendedToken)
     setToToken(from)
     setFromAmount("")
     setToAmount("")
@@ -153,8 +140,9 @@ export const DexAggregator = () => {
 
   const handleToTokenChange = (value: string) => {
     const to = toToken;
-    setFromToken("0xa000000000000000000000000000000000000000")
-    setToToken(value)
+    const from = tokenList.find(token => token.address === value)
+    setToToken(BLANK_TOKEN)
+    setToToken(from as ExtendedToken)
     setFromToken(to)
     setFromAmount("")
     setToAmount("")
@@ -162,21 +150,25 @@ export const DexAggregator = () => {
     setBestDex("")
   }
 
-  const { calldata, swapRoute }  = useCreateRoute(WETH_TOKEN, USDC_TOKEN, parseFloat(amount || "0"))
-  const { getTrade } = useCreateTrade(calldata as string, swapRoute, parseFloat(amount || "0"))
-  const { approve, error, isConfirmed } = useApprove(WETH_TOKEN)
-  const { deposit, error: depositError, isSuccess: isDeposited } = useWETH()
+  const { calldata, swapRoute }  = useCreateRoute((direction === 'fromTo' ? fromToken : toToken), (direction === 'fromTo' ? toToken : fromToken), parseFloat(amount || "0"))
+  const { getTrade } = useCreateTrade((direction === 'fromTo' ? fromToken : toToken), (direction === 'fromTo' ? toToken : fromToken), calldata as string, swapRoute, parseFloat(amount || "0"))
+  const { approve, error, isConfirmed } = useApprove((direction === 'fromTo' ? fromToken : toToken))
+  const { deposit, withdraw, error: depositError, isSuccess: isDeposited } = useWETH(fromToken)
 
   const handleSwap = useCallback(async () => {
     setTrade(getTrade())
-    await deposit(parseFloat(amount || "0"))
+    // if(fromToken.address != WETH_TOKEN.address){
+    //   await deposit(parseFloat(amount || "0"))
+    // }
+
+    console.log({amount})
     await approve({
-      address: WETH_TOKEN.address as `0x${string}`,
+      address: (direction === 'fromTo' ? fromToken : toToken).address as `0x${string}`,
       abi: ERC20_ABI,
       functionName: 'approve',
       args: [SWAP_ROUTER_ADDRESS, fromReadableAmount(
         parseFloat(amount || '0'),
-        WETH_TOKEN.decimals
+        (direction === 'fromTo' ? fromToken : toToken).decimals
       ).toString()]
     })
   }, [amount, approve, deposit, getTrade])
@@ -196,8 +188,6 @@ export const DexAggregator = () => {
     return bestDex == 'Uniswap' ? 'bg-pink-500' : 'bg-purple-600'
   }
 
-  console.log({swap: swapButtonClass()})
-
   return (
     <main className="flex-grow flex items-center justify-center p-4">
       {isConnected ? (
@@ -206,7 +196,7 @@ export const DexAggregator = () => {
           <Label htmlFor="fromToken">From</Label>
           <div id="fromToken" className="mb-4 flex">
             <Input type="text" placeholder="0" value={fromAmount} onChange={handleFromAmountChange} />
-            <Select onValueChange={handleFromTokenChange} value={fromToken}>
+            <Select onValueChange={handleFromTokenChange} value={fromToken.address}>
               <SelectTrigger className="w-[180px]">
                 <SelectValue className="text-black" />
               </SelectTrigger>
@@ -222,7 +212,7 @@ export const DexAggregator = () => {
           <Label htmlFor="fromToken">To</Label>
           <div id="fromToken" className="mb-4 flex">
             <Input type="text" placeholder="0" value={toAmount} onChange={handleToAmountChange} />
-            <Select onValueChange={handleToTokenChange} value={toToken}>
+            <Select onValueChange={handleToTokenChange} value={toToken.address}>
               <SelectTrigger className="w-[180px]">
                 <SelectValue className="text-black" />
               </SelectTrigger>
@@ -236,13 +226,14 @@ export const DexAggregator = () => {
             </Select>
           </div>
           <div className="my-4">
-            {isUniswapPriceLoading ? 'Sushiswap Loading': ''}
+            {isSushiSwapPriceLoading ? 'Sushiswap Loading': ''}
+            {isUniswapPriceLoading ? 'Uniswap Loading': ''}
             <p>{`Best price found on: ${isUniswapPriceLoading || isSushiSwapPriceLoading ? 'Loading...': bestDex}`}</p>
           </div>
           <p>Uniswap Price: {uniswapPrice}</p>
           <p>Sushiswap Price: {sushiSwapPrice}</p>
           <p>ETH: {adjustNumber(Number(ethBalance?.value || 0), 18)}</p>
-          <p>WETH: {adjustNumber(Number(wethBalance || 0), 12)}</p>
+          <p>WETH: {adjustNumber(Number(wethBalance || 0), 18)}</p>
           <p>USDC: {adjustNumber(Number(usdcBalance || 0), 6)}</p>
           <Button
             // disabled={quotedAmountOut === '0'}

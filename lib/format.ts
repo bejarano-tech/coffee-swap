@@ -1,5 +1,5 @@
-export const adjustNumber = (input: number, zeroCount: number) => {
-  const multiplyBy = 1 / Math.pow(10, zeroCount);
+export const adjustNumber = (input: number, decimals: number) => {
+  const multiplyBy = 1 / Math.pow(10, decimals);
 
   const number = input * multiplyBy;
 
