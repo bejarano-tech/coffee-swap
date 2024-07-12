@@ -5,6 +5,11 @@ import { ConnectButton } from "@rainbow-me/rainbowkit";
 import { useQuote } from "@/hooks/useQuote";
 import { Input } from "./ui/input";
 import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -14,7 +19,14 @@ import {
 import { Label } from "./ui/label";
 import { Button } from "./ui/button";
 import { adjustNumber, formatNumber } from "@/lib/format";
-import { BLANK_TOKEN, ExtendedToken, SWAP_ROUTER_ADDRESS, tokenList, USDC_TOKEN, WETH_TOKEN } from "@/lib/constants";
+import {
+  BLANK_TOKEN,
+  ExtendedToken,
+  SWAP_ROUTER_ADDRESS,
+  tokenList,
+  USDC_TOKEN,
+  WETH_TOKEN,
+} from "@/lib/constants";
 import { useCreateRoute } from "@/hooks/useCreateRoute";
 import { useCreateTrade } from "@/hooks/useCreateTrade";
 import { useApprove } from "@/hooks/useApprove";
@@ -26,6 +38,8 @@ import { useExecuteTrade } from "@/hooks/useExecuteTrade";
 import { useWETH } from "@/hooks/useWETH";
 import { format } from "path";
 import { useSushiSwapQuote } from "@/hooks/useSushiSwapQuote";
+import { Settings } from "lucide-react";
+import { ToggleGroup, ToggleGroupItem } from "./ui/toggle-group";
 
 export const DexAggregator = () => {
   const { isConnected, address, chainId } = useAccount();
@@ -37,51 +51,66 @@ export const DexAggregator = () => {
   const [fromAmount, setFromAmount] = useState("");
   const [toAmount, setToAmount] = useState("");
   const [direction, setDirection] = useState("fromTo");
-  const [reverse, setReverse] = useState(false)
+  const [reverse, setReverse] = useState(false);
   const [bestDex, setBestDex] = useState<string | null>(null);
   const [amount, setAmount] = useState("0");
-  const [trade, setTrade] = useState<Trade<Token, Token, TradeType.EXACT_INPUT> | null>(null)
+  const [trade, setTrade] = useState<Trade<
+    Token,
+    Token,
+    TradeType.EXACT_INPUT
+  > | null>(null);
 
-  const fromTokenZeroCount = tokenList.find(token => token.address === fromToken.address)?.zeroCount || 18;
-  const toTokenZeroCount = tokenList.find(token => token.address === toToken.address)?.zeroCount || 18;
+  const fromTokenZeroCount =
+    tokenList.find((token) => token.address === fromToken.address)?.zeroCount ||
+    18;
+  const toTokenZeroCount =
+    tokenList.find((token) => token.address === toToken.address)?.zeroCount ||
+    18;
 
-  const fromTokenDecimals = tokenList.find(token => token.address === fromToken.address)?.decimals || 18;
-  const toTokenDecimals = tokenList.find(token => token.address === toToken.address)?.decimals || 18;
+  const fromTokenDecimals =
+    tokenList.find((token) => token.address === fromToken.address)?.decimals ||
+    18;
+  const toTokenDecimals =
+    tokenList.find((token) => token.address === toToken.address)?.decimals ||
+    18;
 
-  const { quotedAmountOut: uniswapPrice, isLoading: isUniswapPriceLoading } = useQuote(
-    (direction === 'fromTo' ? fromToken : toToken),
-    (direction === 'fromTo' ? toToken : fromToken),
+  const { quotedAmountOut: uniswapPrice, isLoading: isUniswapPriceLoading } =
+    useQuote(
+      direction === "fromTo" ? fromToken : toToken,
+      direction === "fromTo" ? toToken : fromToken,
+      parseFloat(amount || "0"),
+      direction === "fromTo" ? toTokenZeroCount : fromTokenZeroCount
+    );
+
+  const {
+    quotedAmountOut: sushiSwapPrice,
+    isLoading: isSushiSwapPriceLoading,
+  } = useSushiSwapQuote(
+    direction === "fromTo" ? fromToken : toToken,
+    direction === "fromTo" ? toToken : fromToken,
     parseFloat(amount || "0"),
-    direction === 'fromTo' ? toTokenZeroCount : fromTokenZeroCount
-  );
-
-  const { quotedAmountOut: sushiSwapPrice, isLoading: isSushiSwapPriceLoading } = useSushiSwapQuote(
-    (direction === 'fromTo' ? fromToken : toToken),
-    (direction === 'fromTo' ? toToken : fromToken),
-    parseFloat(amount || "0"),
-    direction === 'fromTo' ? toTokenZeroCount : fromTokenZeroCount
+    direction === "fromTo" ? toTokenZeroCount : fromTokenZeroCount
   );
 
   const { data: usdcBalance } = useReadContract({
     address: USDC_TOKEN.address as `0x${string}`,
     abi: ERC20_ABI,
-    functionName: 'balanceOf',
+    functionName: "balanceOf",
     args: [address],
   });
 
   const { data: wethBalance } = useReadContract({
     address: WETH_TOKEN.address as `0x${string}`,
     abi: ERC20_ABI,
-    functionName: 'balanceOf',
+    functionName: "balanceOf",
     args: [address],
   });
 
   useEffect(() => {
     const updateViews = async () => {
-      
-      const bestPrice = Math.max(uniswapPrice, sushiSwapPrice)
+      const bestPrice = Math.max(uniswapPrice, sushiSwapPrice);
       if (bestPrice == 0) {
-        return
+        return;
       }
       let bestDexName = "";
       if (bestPrice === uniswapPrice) {
@@ -91,106 +120,188 @@ export const DexAggregator = () => {
       }
 
       setBestDex(bestDexName);
-      if (direction == 'fromTo') {
-          setToAmount(formatNumber(bestPrice, toTokenDecimals))
+      if (direction == "fromTo") {
+        setToAmount(formatNumber(bestPrice, toTokenDecimals));
       } else {
-        setFromAmount(formatNumber(bestPrice, fromTokenDecimals))
+        setFromAmount(formatNumber(bestPrice, fromTokenDecimals));
       }
-    }
-    updateViews()
-  }, [amount, direction, fromTokenDecimals, reverse, toTokenDecimals, uniswapPrice])
+    };
+    updateViews();
+  }, [
+    amount,
+    direction,
+    fromTokenDecimals,
+    reverse,
+    sushiSwapPrice,
+    toTokenDecimals,
+    uniswapPrice,
+  ]);
 
   useEffect(() => {
-    setAmount((direction === 'fromTo') ? fromAmount : toAmount)
-  }, [fromAmount, toAmount])
+    setAmount(direction === "fromTo" ? fromAmount : toAmount);
+  }, [fromAmount, toAmount]);
 
-  const handleFromAmountChange = (event: { target: { value: SetStateAction<string>; }; }) => {
-    setDirection('fromTo')
-    const { value } = event.target
-    if(value == '' || value =='0'){
-      setToAmount('')
+  const handleFromAmountChange = (event: {
+    target: { value: SetStateAction<string> };
+  }) => {
+    setDirection("fromTo");
+    const { value } = event.target;
+    if (value == "" || value == "0") {
+      setToAmount("");
     }
-    const formated = (value as string).split(',').join('')
-    setFromAmount(formated)
-    setBestDex("")
-  }
-  
-  const handleToAmountChange = (event: { target: { value: SetStateAction<string>; }; }) => {
-    setDirection('toFrom')
-    const { value } = event.target
-    if(value == '' || value =='0'){
-      setFromAmount('')
+    const formated = (value as string).split(",").join("");
+    setFromAmount(formated);
+    setBestDex("");
+  };
+
+  const handleToAmountChange = (event: {
+    target: { value: SetStateAction<string> };
+  }) => {
+    setDirection("toFrom");
+    const { value } = event.target;
+    if (value == "" || value == "0") {
+      setFromAmount("");
     }
-    const formated = (value as string).split(',').join('')
-    setToAmount(formated)
-    setBestDex("")
-  }
+    const formated = (value as string).split(",").join("");
+    setToAmount(formated);
+    setBestDex("");
+  };
 
   const handleFromTokenChange = (value: string) => {
     const from = fromToken;
-    const to = tokenList.find(token => token.address === value)
-    setToToken(BLANK_TOKEN)
-    setFromToken(to as ExtendedToken)
-    setToToken(from)
-    setFromAmount("")
-    setToAmount("")
-    setReverse(!reverse)
-    setBestDex("")
-  }
+    const to = tokenList.find((token) => token.address === value);
+    setToToken(BLANK_TOKEN);
+    setFromToken(to as ExtendedToken);
+    setToToken(from);
+    setFromAmount("");
+    setToAmount("");
+    setReverse(!reverse);
+    setBestDex("");
+  };
 
   const handleToTokenChange = (value: string) => {
     const to = toToken;
-    const from = tokenList.find(token => token.address === value)
-    setToToken(BLANK_TOKEN)
-    setToToken(from as ExtendedToken)
-    setFromToken(to)
-    setFromAmount("")
-    setToAmount("")
-    setReverse(!reverse)
-    setBestDex("")
-  }
+    const from = tokenList.find((token) => token.address === value);
+    setToToken(BLANK_TOKEN);
+    setToToken(from as ExtendedToken);
+    setFromToken(to);
+    setFromAmount("");
+    setToAmount("");
+    setReverse(!reverse);
+    setBestDex("");
+  };
 
-  const { calldata, swapRoute }  = useCreateRoute((direction === 'fromTo' ? fromToken : toToken), (direction === 'fromTo' ? toToken : fromToken), parseFloat(amount || "0"))
-  const { getTrade } = useCreateTrade((direction === 'fromTo' ? fromToken : toToken), (direction === 'fromTo' ? toToken : fromToken), calldata as string, swapRoute, parseFloat(amount || "0"))
-  const { approve, error, isConfirmed } = useApprove((direction === 'fromTo' ? fromToken : toToken))
-  const { deposit, withdraw, error: depositError, isSuccess: isDeposited } = useWETH(fromToken)
+  const { calldata, swapRoute } = useCreateRoute(
+    direction === "fromTo" ? fromToken : toToken,
+    direction === "fromTo" ? toToken : fromToken,
+    parseFloat(amount || "0")
+  );
+  const { getTrade } = useCreateTrade(
+    direction === "fromTo" ? fromToken : toToken,
+    direction === "fromTo" ? toToken : fromToken,
+    calldata as string,
+    swapRoute,
+    parseFloat(amount || "0")
+  );
+  const { approve, error, isConfirmed } = useApprove(
+    direction === "fromTo" ? fromToken : toToken
+  );
+  const {
+    deposit,
+    withdraw,
+    error: depositError,
+    isSuccess: isDeposited,
+  } = useWETH(fromToken);
 
   const handleSwap = useCallback(async () => {
-    setTrade(getTrade())
+    setTrade(getTrade());
     // if(fromToken.address != WETH_TOKEN.address){
     //   await deposit(parseFloat(amount || "0"))
     // }
 
-    console.log({amount})
+    console.log({ amount });
     await approve({
-      address: (direction === 'fromTo' ? fromToken : toToken).address as `0x${string}`,
+      address: (direction === "fromTo" ? fromToken : toToken)
+        .address as `0x${string}`,
       abi: ERC20_ABI,
-      functionName: 'approve',
-      args: [SWAP_ROUTER_ADDRESS, fromReadableAmount(
-        parseFloat(amount || '0'),
-        (direction === 'fromTo' ? fromToken : toToken).decimals
-      ).toString()]
-    })
-  }, [amount, approve, deposit, getTrade])
+      functionName: "approve",
+      args: [
+        SWAP_ROUTER_ADDRESS,
+        fromReadableAmount(
+          parseFloat(amount || "0"),
+          (direction === "fromTo" ? fromToken : toToken).decimals
+        ).toString(),
+      ],
+    });
+  }, [amount, approve, deposit, getTrade]);
 
-  const { executeTrade } = useExecuteTrade(trade, address)
+  const { executeTrade } = useExecuteTrade(trade, address);
 
   useEffect(() => {
-    if(isConfirmed){
-      executeTrade()
+    if (isConfirmed) {
+      executeTrade();
     }
-  }, [isConfirmed])
+  }, [isConfirmed]);
 
   const swapButtonClass = () => {
-    if(!bestDex) {
-      return 'bg-yellow-600'
+    if (!bestDex) {
+      return "bg-yellow-600";
     }
-    return bestDex == 'Uniswap' ? 'bg-pink-500' : 'bg-purple-600'
+    return bestDex == "Uniswap" ? "bg-pink-500" : "bg-purple-600";
+  };
+
+  const [slippage, setSlippage] = useState("2.5")
+
+  const handleSlippageChange = (value: SetStateAction<string>) => {
+    setSlippage(value)
+  }
+
+  const settings = (
+    <>
+      <p>Slippage Tolerance</p>
+      <div>
+        <ToggleGroup onValueChange={handleSlippageChange} type="single" value={slippage}>
+          <ToggleGroupItem  value="0.5" aria-label="0.5%">
+            0.5%
+          </ToggleGroupItem>
+          <ToggleGroupItem value="2.5" aria-label="2.5%">
+            2.5%
+          </ToggleGroupItem>
+          <ToggleGroupItem value="5" aria-label="5%">
+            5%
+          </ToggleGroupItem>
+        </ToggleGroup>
+      </div>
+    </>
+  );
+
+  const [tokenOneAmount, setTokenOneAmount] = useState<string | undefined>(undefined)
+  const [tokenTwoAmount, setTokenTwoAmount] = useState<string | undefined>(undefined)
+
+  const changeAmount = (e: { target: { value: SetStateAction<string | undefined>; }; }) => {
+    setTokenOneAmount(e.target.value)
   }
 
   return (
     <main className="flex-grow flex items-center justify-center p-4">
-      {isConnected ? (
+      <div className="w-full md:w-[600px] bg-slate-900 text-white rounded p-4">
+        <div className="flex justify-between items-center mb-8">
+          <h3 className="font-xl font-bold">Swap</h3>
+          <Popover>
+            <PopoverTrigger>
+              <Settings />
+            </PopoverTrigger>
+            <PopoverContent className="bg-slate-900 text-white" side="left">{settings}</PopoverContent>
+          </Popover>
+        </div>
+        <div>
+          <Input className="rounded-2xl text-4xl px-4 py-12 bg-slate-400 text-white" value={tokenOneAmount} placeholder="0" onChange={changeAmount} />
+          <Input className="rounded-2xl text-4xl px-4 py-12 bg-slate-400 text-white" value={tokenTwoAmount} placeholder="0" disabled={true} />
+          <div></div>
+          <div></div>
+        </div>
+      </div>
+      {/* {isConnected ? (
         <div className="bg-gray-200 p-8 rounded-lg shadow-md w-full max-w-md">
           <h2 className="text-2xl font-bold mb-6">Swap Tokens</h2>
           <Label htmlFor="fromToken">From</Label>
@@ -245,7 +356,7 @@ export const DexAggregator = () => {
         </div>
       ) : (
         <ConnectButton />
-      )}
+      )} */}
     </main>
   );
 };

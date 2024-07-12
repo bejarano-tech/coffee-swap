@@ -11,7 +11,7 @@ import { Navbar } from "@/components/layout/Navbar";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "DEX Aggregator",
+  title: "CoffeSwap | DEX Aggregator",
   description: "DEX Aggregator",
 };
 
