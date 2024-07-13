@@ -21,8 +21,6 @@ export const useExecuteTrade = (trade: Trade<Token, Token, TradeType.EXACT_INPUT
     }
   }, [trade])
 
-  console.log({trade})
-
   const tx = {
     data: methodParameters?.calldata,
     to: SWAP_ROUTER_ADDRESS as `0x${string}`,

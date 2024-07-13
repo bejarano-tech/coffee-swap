@@ -203,7 +203,7 @@ export const DexAggregator = () => {
     swapRoute,
     parseFloat(amount || "0")
   );
-  const { approve, error, isConfirmed } = useApprove(
+  const { approve, error, isApproved } = useApprove(
     direction === "fromTo" ? fromToken : toToken
   );
   const {
@@ -216,10 +216,9 @@ export const DexAggregator = () => {
   const handleSwap = useCallback(async () => {
     setTrade(getTrade());
     // if(fromToken.address != WETH_TOKEN.address){
-    //   await deposit(parseFloat(amount || "0"))
+      await deposit(parseFloat(amount || "0"))
     // }
 
-    console.log({ amount });
     await approve({
       address: (direction === "fromTo" ? fromToken : toToken)
         .address as `0x${string}`,
@@ -238,10 +237,10 @@ export const DexAggregator = () => {
   const { executeTrade } = useExecuteTrade(trade, address);
 
   useEffect(() => {
-    if (isConfirmed) {
+    if (isApproved) {
       executeTrade();
     }
-  }, [isConfirmed]);
+  }, [isApproved]);
 
   const swapButtonClass = () => {
     if (!bestDex) {
@@ -284,7 +283,7 @@ export const DexAggregator = () => {
 
   return (
     <main className="flex-grow flex items-center justify-center p-4">
-      <div className="w-full md:w-[600px] bg-slate-900 text-white rounded p-4">
+      {/* <div className="w-full md:w-[600px] bg-slate-900 text-white rounded p-4">
         <div className="flex justify-between items-center mb-8">
           <h3 className="font-xl font-bold">Swap</h3>
           <Popover>
@@ -300,8 +299,8 @@ export const DexAggregator = () => {
           <div></div>
           <div></div>
         </div>
-      </div>
-      {/* {isConnected ? (
+      </div> */}
+      {isConnected ? (
         <div className="bg-gray-200 p-8 rounded-lg shadow-md w-full max-w-md">
           <h2 className="text-2xl font-bold mb-6">Swap Tokens</h2>
           <Label htmlFor="fromToken">From</Label>
@@ -356,7 +355,7 @@ export const DexAggregator = () => {
         </div>
       ) : (
         <ConnectButton />
-      )} */}
+      )}
     </main>
   );
 };

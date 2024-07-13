@@ -56,6 +56,15 @@ export const BLANK_TOKEN = new ExtendedToken(
   'BLANK'
 )
 
+export const ETH_TOKEN = new ExtendedToken(
+  12,
+  12,
+  '0xa000000000000000000000000000000000000000',
+  6,
+  'ETH',
+  'Ethereum'
+)
+
 export const tokenList = [
   WETH_TOKEN,
   USDC_TOKEN,
