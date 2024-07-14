@@ -313,10 +313,7 @@ export const Swap = () => {
             <div className="mt-1 me-1 absolute right-0 flex justify-end">
               <span className="text-right text-slate-400">
                 {tokenOne.symbol} Balance:{" "}
-                {adjustNumber(
-                  Number(tokenOneBalance),
-                  tokenOne.decimals
-                ).toLocaleString("en-US")}
+                {parseFloat(toReadableAmount(tokenOneBalance as number, tokenOne.decimals))}
               </span>
             </div>
           </div>
@@ -352,10 +349,7 @@ export const Swap = () => {
             <div className="mt-1 me-1 absolute right-0 flex justify-end">
               <span className="text-right text-slate-400">
                 {tokenTwo.symbol} Balance:{" "}
-                {adjustNumber(
-                  Number(tokenTwoBalance),
-                  tokenTwo.decimals
-                ).toLocaleString("en-US")}
+                {parseFloat(toReadableAmount(tokenTwoBalance as number, tokenTwo.decimals))}
               </span>
             </div>
           </div>

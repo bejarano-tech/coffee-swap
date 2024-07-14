@@ -1,6 +1,6 @@
 import { BigNumberish, formatUnits, parseUnits } from 'ethers'
 
-const READABLE_FORM_LEN = 9
+const READABLE_FORM_LEN = 10
 
 export function fromReadableAmount(
   amount: number,

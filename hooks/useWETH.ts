@@ -1,7 +1,6 @@
 import { ERC20_ABI } from "@/blockchain/abis/ERC_20";
 import { WETH_TOKEN } from "@/lib/constants";
-import { fromReadableAmount, toReadableAmount } from "@/lib/conversion";
-import { Token } from "@uniswap/sdk-core";
+import { fromReadableAmount } from "@/lib/conversion";
 import { useWaitForTransactionReceipt, useWriteContract } from "wagmi";
 
 export const useWETH = () => {

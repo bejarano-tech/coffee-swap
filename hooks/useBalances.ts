@@ -2,7 +2,6 @@ import { ERC20_ABI } from "@/blockchain/abis/ERC_20"
 import { useAccount, useReadContracts, useBalance } from 'wagmi';
 import { Token } from '../components/Swap';
 import { ETH_TOKEN } from "@/lib/constants";
-import { toReadableAmount } from "@/lib/conversion";
 
 export const useBalances = (tokenOne: Token, tokenTwo: Token) => {
   const { address } = useAccount()
@@ -35,8 +34,6 @@ export const useBalances = (tokenOne: Token, tokenTwo: Token) => {
 
   const tokenOneBalance = (tokenOne.symbol == ETH_TOKEN.symbol) ? ethBalance.data?.value || 0 : data && data[0].result ? data[0].result : 0
   const tokenTwoBalance = (tokenTwo.symbol == ETH_TOKEN.symbol) ? ethBalance.data?.value || 0 :data && data[1].result ? data[1].result : 0
-
-  console.log({tokenOneBalance: toReadableAmount(tokenOneBalance as number, tokenOne.decimals), tokenTwoBalance})
 
   return { tokenOneBalance, tokenTwoBalance }
 }
