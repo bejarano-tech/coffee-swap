@@ -19,9 +19,10 @@ import { parseUnits } from "ethers";
 import tokensList from "@/lib/tokenList.json";
 import { useApprove } from "@/hooks/useApprove";
 import { ERC20_ABI } from "@/blockchain/abis/ERC_20";
-import { SWAP_ROUTER_ADDRESS } from "@/lib/constants";
-import { fromReadableAmount } from "@/lib/conversion";
+import { ETH_TOKEN, SWAP_ROUTER_ADDRESS } from "@/lib/constants";
+import { fromReadableAmount, toReadableAmount } from "@/lib/conversion";
 import { useBalances } from "@/hooks/useBalances";
+import { useWETH } from "@/hooks/useWETH";
 
 export type Token = {
   symbol: string;
@@ -36,6 +37,11 @@ type TokensByChainId = {
 };
 
 const tokens: TokensByChainId = tokensList;
+
+interface Error {
+  title: string
+  description: string
+}
 
 export const Swap = () => {
   const { isConnected, address, chainId } = useAccount();
@@ -53,11 +59,18 @@ export const Swap = () => {
   const [changeToken, setChangeToken] = useState(1);
   const [isPending, startTransition] = useTransition();
   const [prices, setPrices] = useState(null);
-  const { approve, error, isApproving, isApproved } = useApprove();
-  const { ethBalance, tokenOneBalance, tokenTwoBalance } = useBalances(
-    tokenOne.address,
-    tokenTwo.address
+  const { approve, isApproving, isApproved } = useApprove();
+  const {
+    deposit,
+    withdraw,
+    error: depositError,
+    isSuccess: isDeposited,
+  } = useWETH();
+  const { tokenOneBalance, tokenTwoBalance } = useBalances(
+    tokenOne,
+    tokenTwo
   );
+  const [error, setError] = useState<Error| null>(null)
 
   const handleSlippageChange = (value: SetStateAction<string>) => {
     setSlippage(value);
@@ -148,6 +161,28 @@ export const Swap = () => {
     setIsOpen(false);
   };
 
+  const handleApprove = async (allowance: number) => {
+    if (allowance === 0) {
+      console.log("Approve WETH");
+      try {
+        await approve({
+          address: tokenOne.address as `0x${string}`,
+          abi: ERC20_ABI,
+          functionName: "approve",
+          args: [
+            SWAP_ROUTER_ADDRESS,
+            fromReadableAmount(
+              parseFloat(tokenOneAmount || "0"),
+              tokenOne.decimals
+            ).toString(),
+          ],
+        });
+      } catch (error) {
+        console.log(error);
+      }
+    }
+  }
+
   const handleSwap = () => {
     startTransition(async () => {
       const allowance = await getAllowance(
@@ -155,69 +190,58 @@ export const Swap = () => {
         tokenOne.address,
         address as string
       );
-      // if (allowance === 0) {
-      //   try {
-      //     await approve({
-      //       address: tokenOne.address as `0x${string}`,
-      //       abi: ERC20_ABI,
-      //       functionName: "approve",
-      //       args: [
-      //         SWAP_ROUTER_ADDRESS,
-      //         fromReadableAmount(
-      //           parseFloat(tokenOneAmount || "0"),
-      //           tokenOne.decimals
-      //         ).toString(),
-      //       ],
-      //     });
-      //   } catch (error) {
-      //     console.log(error);
-      //   }
-      // }
       if (tokenOne.symbol === "ETH" && tokenTwo.symbol === "ETH") {
         console.log("Nothing to do");
+        return;
       } else if (tokenOne.symbol === "ETH" && tokenTwo.symbol === "WETH") {
-        console.log("Deposit");
+        await deposit(parseFloat(tokenOneAmount || "0"))
+        console.log("Deposit to WETH");
       } else if (tokenOne.symbol === "ETH") {
         if (tokenTwo.symbol !== "WETH") {
-          console.log("Deposit WETH");
-          if (allowance === 0){
-            console.log("Approve WETH");
-          }
+          await deposit(parseFloat(tokenOneAmount || "0"))
+          console.log("Deposit to WETH");
+          handleApprove(allowance as number);
           console.log("Swap from WETH");
         }
       } else if (tokenOne.symbol === "WETH" && tokenTwo.symbol === "WETH") {
         console.log("Nothing to do");
+        return;
       } else if (tokenOne.symbol === "WETH" && tokenTwo.symbol === "ETH") {
-        if (allowance === 0){
-          console.log("Approve tokenOne");
-        }
-          console.log("Withdraw");
+        handleApprove(allowance as number);
+        console.log("Withdraw");
       } else if (tokenOne.symbol === "WETH") {
         if (tokenTwo.symbol !== "ETH") {
-          if (allowance === 0){
-            console.log("Approve tokenOne");
-          }
+          handleApprove(allowance as number);
           console.log("Swap from WETH");
         }
       } else if (tokenTwo.symbol === "ETH") {
-        if (allowance === 0){
-          console.log("Aprove tokenOne");
-        }
+        handleApprove(allowance as number);
         console.log("Swap to WETH");
         console.log("Withdraw");
       } else if (tokenTwo.symbol === "WETH") {
-        if (allowance === 0){
-          console.log("Approve tokenOne");
-        }
+        handleApprove(allowance as number);
         console.log("Swap to WETH");
       } else {
-        if (allowance === 0){
-          console.log("Approve tokenOne");
-        }
+        handleApprove(allowance as number);
         console.log("Swap");
       }
     });
   };
+
+  const hasBalance = () => {
+    return parseFloat(toReadableAmount(tokenOneBalance as number, tokenOne.decimals)) < parseFloat(tokenOneAmount as string)
+  }
+
+  useEffect(() => {
+    if(hasBalance()) {
+      setError({
+        title: `You don't have enough ${tokenOne.symbol} balance`,
+        description: `You need to have at least X ${tokenOne.symbol} to carry out this swap`
+      })
+    } else {
+      setError(null)
+    }
+  }, [tokenOneBalance, tokenOneAmount])
 
   return (
     <main className="flex-grow flex items-center justify-center p-4">
@@ -335,11 +359,12 @@ export const Swap = () => {
               </span>
             </div>
           </div>
+          {error ? <div className="my-4 bg-red-400 p-4 rounded"><p>{error.title}</p><p>{error.description}</p></div> : null}
           <div>
             <Button
               onClick={handleSwap}
               disabled={
-                isPending || !tokenOneAmount || !isConnected || isApproving
+                isPending || !tokenOneAmount || !isConnected || isApproving || hasBalance() 
               }
               variant="big"
               className="px-4 py-12 rounded-3xl"

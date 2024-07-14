@@ -203,15 +203,13 @@ export const DexAggregator = () => {
     swapRoute,
     parseFloat(amount || "0")
   );
-  const { approve, error, isApproved } = useApprove(
-    direction === "fromTo" ? fromToken : toToken
-  );
+  const { approve, error, isApproved } = useApprove();
   const {
     deposit,
     withdraw,
     error: depositError,
     isSuccess: isDeposited,
-  } = useWETH(fromToken);
+  } = useWETH();
 
   const handleSwap = useCallback(async () => {
     setTrade(getTrade());

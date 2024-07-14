@@ -4,7 +4,7 @@ import { fromReadableAmount, toReadableAmount } from "@/lib/conversion";
 import { Token } from "@uniswap/sdk-core";
 import { useWaitForTransactionReceipt, useWriteContract } from "wagmi";
 
-export const useWETH = (token: Token) => {
+export const useWETH = () => {
   const { writeContractAsync, error, data: hash } = useWriteContract()
   const { isLoading: isConfirming, isSuccess: isConfirmed } =
   useWaitForTransactionReceipt({

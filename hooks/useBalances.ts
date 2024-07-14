@@ -1,17 +1,20 @@
 import { ERC20_ABI } from "@/blockchain/abis/ERC_20"
 import { useAccount, useReadContracts, useBalance } from 'wagmi';
+import { Token } from '../components/Swap';
+import { ETH_TOKEN } from "@/lib/constants";
+import { toReadableAmount } from "@/lib/conversion";
 
-export const useBalances = (tokenOneAddress: string, tokenTwoAddress: string) => {
-  const ethBalance = useBalance()
+export const useBalances = (tokenOne: Token, tokenTwo: Token) => {
   const { address } = useAccount()
+  const ethBalance = useBalance({address})
 
   const tokenOneContract = {
-    address: tokenOneAddress as `0x${string}`,
+    address: tokenOne.address as `0x${string}`,
     abi: ERC20_ABI,
   } as const
 
   const tokenTwoContract = {
-    address: tokenTwoAddress as `0x${string}`,
+    address: tokenTwo.address as `0x${string}`,
     abi: ERC20_ABI,
   } as const
 
@@ -30,10 +33,10 @@ export const useBalances = (tokenOneAddress: string, tokenTwoAddress: string) =>
     ]
   })
 
-  const tokenOneBalance = data && data[0].result ? data[0].result : 0
-  const tokenTwoBalance = data && data[1].result ? data[1].result : 0
+  const tokenOneBalance = (tokenOne.symbol == ETH_TOKEN.symbol) ? ethBalance.data?.value || 0 : data && data[0].result ? data[0].result : 0
+  const tokenTwoBalance = (tokenTwo.symbol == ETH_TOKEN.symbol) ? ethBalance.data?.value || 0 :data && data[1].result ? data[1].result : 0
 
-  console.log(data)
+  console.log({tokenOneBalance: toReadableAmount(tokenOneBalance as number, tokenOne.decimals), tokenTwoBalance})
 
-  return { ethBalance: ethBalance.data, tokenOneBalance, tokenTwoBalance }
+  return { tokenOneBalance, tokenTwoBalance }
 }
