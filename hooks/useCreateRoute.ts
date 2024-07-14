@@ -1,5 +1,5 @@
 import { CurrencyAmount, Token, TradeType } from "@uniswap/sdk-core"
-import { POOL_FACTORY_CONTRACT_ADDRESS } from '@/lib/constants';
+import { BLANK_TOKEN, ETH_TOKEN, POOL_FACTORY_CONTRACT_ADDRESS } from '@/lib/constants';
 import { computePoolAddress, FeeAmount, Pool, Route, SwapQuoter } from "@uniswap/v3-sdk";
 import { http, useCall, useReadContract } from "wagmi";
 import IUniswapV3PoolABI from '@uniswap/v3-core/artifacts/contracts/interfaces/IUniswapV3Pool.sol/IUniswapV3Pool.json';
@@ -10,6 +10,7 @@ import { mainnet } from "wagmi/chains";
 import { createPublicClient } from "viem";
 
 export const useCreateRoute = (tokenIn: Token, tokenOut: Token, amountIn: number) => {
+
   
   const currentPoolAddress = computePoolAddress({
     factoryAddress: POOL_FACTORY_CONTRACT_ADDRESS,
@@ -17,17 +18,7 @@ export const useCreateRoute = (tokenIn: Token, tokenOut: Token, amountIn: number
     tokenB: tokenOut,
     fee: FeeAmount.MEDIUM,
   }) as `0x${string}`
-
-  const { data: token0 } = useReadContract({
-    address: currentPoolAddress,
-    abi: IUniswapV3PoolABI.abi,
-    functionName: 'token0',    
-  })
-  const { data: token1 } = useReadContract({
-    address: currentPoolAddress,
-    abi: IUniswapV3PoolABI.abi,
-    functionName: 'token1',    
-  })
+  
   const { data: fee } = useReadContract({
     address: currentPoolAddress,
     abi: IUniswapV3PoolABI.abi,
@@ -66,6 +57,7 @@ export const useCreateRoute = (tokenIn: Token, tokenOut: Token, amountIn: number
     ticks
   )
 
+  
   const swapRoute = new Route(
     [pool],
     tokenIn,

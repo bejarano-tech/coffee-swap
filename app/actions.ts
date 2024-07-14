@@ -98,6 +98,12 @@ export const getPrices = async (
     };
   }
 
+  if(tokenOne.symbol == ETH_TOKEN.symbol) {
+    tokenOne.address = WETH_TOKEN.address
+  }else if(tokenTwo.symbol == ETH_TOKEN.symbol){
+    tokenTwo.address = WETH_TOKEN.address
+  }
+  
   const uniSwapQuote = (await publicClient.readContract({
     address: QUOTER_CONTRACT_ADDRESS_V2,
     abi: QuoterV2.abi,

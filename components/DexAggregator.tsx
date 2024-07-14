@@ -209,7 +209,7 @@ export const DexAggregator = () => {
     withdraw,
     error: depositError,
     isSuccess: isDeposited,
-  } = useWETH(parseFloat(localeStringToFloatString(amount as string) || "0"));
+  } = useWETH(parseFloat(localeStringToFloatString(amount as string) || "0"), fromToken);
 
   const handleSwap = useCallback(async () => {
     setTrade(getTrade());

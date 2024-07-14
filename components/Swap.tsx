@@ -19,10 +19,11 @@ import { parseUnits } from "ethers";
 import tokensList from "@/lib/tokenList.json";
 import { useApprove } from "@/hooks/useApprove";
 import { ERC20_ABI } from "@/blockchain/abis/ERC_20";
-import { ETH_TOKEN, SWAP_ROUTER_ADDRESS } from "@/lib/constants";
+import { ETH_TOKEN, SWAP_ROUTER_ADDRESS, WETH_TOKEN } from "@/lib/constants";
 import { fromReadableAmount, toReadableAmount } from "@/lib/conversion";
 import { useBalances } from "@/hooks/useBalances";
 import { useWETH } from "@/hooks/useWETH";
+import { useSwap } from "@/hooks/useSwap";
 
 export type Token = {
   symbol: string;
@@ -60,18 +61,20 @@ export const Swap = () => {
   const [isPending, startTransition] = useTransition();
   const [prices, setPrices] = useState(null);
   const { approve, isApproving, isApproved } = useApprove();
+  const amountTwoWithdraw = (tokenOne.symbol != ETH_TOKEN.symbol && tokenOne.symbol != WETH_TOKEN.symbol && tokenTwo.symbol == ETH_TOKEN.symbol) ? tokenTwoAmount : tokenOneAmount
+  const decimalsTwoWithdraw = (tokenOne.symbol != ETH_TOKEN.symbol && tokenOne.symbol != WETH_TOKEN.symbol && tokenTwo.symbol == ETH_TOKEN.symbol) ? tokenTwo.decimals : tokenOne.decimals
   const {
     deposit,
     withdraw,
     error: depositError,
     isSuccess: isDeposited,
-  } = useWETH(parseFloat(localeStringToFloatString(tokenOneAmount as string) || "0"), tokenOne);
+  } = useWETH(parseFloat(localeStringToFloatString(amountTwoWithdraw as string) || "0"), decimalsTwoWithdraw);
   const { tokenOneBalance, tokenTwoBalance } = useBalances(
     tokenOne,
     tokenTwo
   );
   const [error, setError] = useState<Error| null>(null)
-
+  const { swap } = useSwap(tokenOne, tokenTwo, tokenOneAmount as string)
   const handleSlippageChange = (value: SetStateAction<string>) => {
     setSlippage(value);
   };
@@ -166,7 +169,7 @@ export const Swap = () => {
       console.log("Approve WETH");
       try {
         await approve({
-          address: tokenOne.address as `0x${string}`,
+          address: (tokenOne.symbol == ETH_TOKEN.symbol ? WETH_TOKEN : tokenOne).address as `0x${string}`,
           abi: ERC20_ABI,
           functionName: "approve",
           args: [
@@ -187,7 +190,7 @@ export const Swap = () => {
     startTransition(async () => {
       const allowance = await getAllowance(
         chainId as number,
-        tokenOne.address,
+        (tokenOne.symbol == ETH_TOKEN.symbol ? WETH_TOKEN : tokenOne).address,
         address as string
       );
       if (tokenOne.symbol === "ETH" && tokenTwo.symbol === "ETH") {
@@ -195,13 +198,11 @@ export const Swap = () => {
         return;
       } else if (tokenOne.symbol === "ETH" && tokenTwo.symbol === "WETH") {
         await deposit()
-        console.log("Deposit to WETH");
       } else if (tokenOne.symbol === "ETH") {
         if (tokenTwo.symbol !== "WETH") {
           await deposit()
-          console.log("Deposit to WETH");
-          handleApprove(allowance as number);
-          console.log("Swap from WETH");
+          await handleApprove(allowance as number);
+          await swap()
         }
       } else if (tokenOne.symbol === "WETH" && tokenTwo.symbol === "WETH") {
         console.log("Nothing to do");
@@ -211,19 +212,19 @@ export const Swap = () => {
         await handleWithdraw()
       } else if (tokenOne.symbol === "WETH") {
         if (tokenTwo.symbol !== "ETH") {
-          handleApprove(allowance as number);
-          console.log("Swap from WETH");
+          await handleApprove(allowance as number);
+          await swap()
         }
       } else if (tokenTwo.symbol === "ETH") {
-        handleApprove(allowance as number);
-        console.log("Swap to WETH");
-        console.log("Withdraw");
+        await handleApprove(allowance as number);
+        await swap()
+        await handleWithdraw()
       } else if (tokenTwo.symbol === "WETH") {
-        handleApprove(allowance as number);
-        console.log("Swap to WETH");
+        await handleApprove(allowance as number);
+        await swap()
       } else {
-        handleApprove(allowance as number);
-        console.log("Swap");
+        await handleApprove(allowance as number);
+        await swap()
       }
     });
   };

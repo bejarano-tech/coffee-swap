@@ -4,7 +4,7 @@
       "symbol": "ETH",
       "img": "/eth-logo.png",
       "name": "Ethereum",
-      "address": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+      "address": "0xa000000000000000000000000000000000000000",
       "decimals": 18
     },
     {
@@ -120,7 +120,7 @@
       "symbol": "ETH",
       "img": "/eth-logo.png",
       "name": "Ethereum",
-      "address": "0xc02aaa39b223fe8d0a0e5c4f27ead9083c756cc2",
+      "address": "0xa000000000000000000000000000000000000000",
       "decimals": 18
     },
     {

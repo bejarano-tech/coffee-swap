@@ -6,35 +6,30 @@ import { Config, useSendTransaction } from "wagmi"
 import { SendTransactionVariables } from "wagmi/query"
 
 export const useExecuteTrade = (trade: Trade<Token, Token, TradeType.EXACT_INPUT> | null, address: `0x${string}` | undefined) => {
-
-  const [methodParameters, setMethodParameters] = useState<MethodParameters | null>(null)
-
+  let tx: SendTransactionVariables<Config, number> | null = null;
+  const { data: hash, sendTransactionAsync, error } = useSendTransaction()
   const options: SwapOptions = {
     slippageTolerance: new Percent(50, 10_000), // 50 bips, or 0.50%
     deadline: Math.floor(Date.now() / 1000) + 60 * 20, // 20 minutes from the current Unix time
     recipient: address as string,
   }
-  
-  useEffect(()=> {
-    if(trade){
-      setMethodParameters(SwapRouter.swapCallParameters([trade as Trade<Token, Token, TradeType.EXACT_INPUT>], options))
-    }
-  }, [trade])
 
-  const tx = {
-    data: methodParameters?.calldata,
-    to: SWAP_ROUTER_ADDRESS as `0x${string}`,
-    value: methodParameters?.value,
-    from: address as `0x${string}`,
-    maxFeePerGas: BigInt(MAX_FEE_PER_GAS),
-    maxPriorityFeePerGas: BigInt(MAX_PRIORITY_FEE_PER_GAS),
-  } as SendTransactionVariables<Config, number>
+  if(trade){
+    const { calldata, value } = SwapRouter.swapCallParameters([trade as Trade<Token, Token, TradeType.EXACT_INPUT>], options)
 
-  const { data: hash, sendTransaction, error } = useSendTransaction()
+    tx = {
+      data: calldata as `0x${string}`,
+      to: SWAP_ROUTER_ADDRESS as `0x${string}`,
+      value: value as unknown as bigint,
+      from: address as `0x${string}`,
+      maxFeePerGas: BigInt(MAX_FEE_PER_GAS),
+      maxPriorityFeePerGas: BigInt(MAX_PRIORITY_FEE_PER_GAS),
+    };
 
-  const executeTrade = () => {
-    console.log({error})
-    sendTransaction(tx)
+  }
+
+  const executeTrade = async () => {
+    await sendTransactionAsync(tx)
   }
 
   return { executeTrade }

@@ -4,7 +4,7 @@ import { fromReadableAmount } from "@/lib/conversion";
 import { useSimulateContract, useWaitForTransactionReceipt, useWriteContract } from "wagmi";
 import { Token } from '../components/Swap';
 
-export const useWETH = (amountIn: number, tokenOne: Token) => {
+export const useWETH = (amountIn: number, decimals: number) => {
 
   const { data: depositSimulation } = useSimulateContract({
     address: WETH_TOKEN.address as `0x${string}`,
@@ -13,13 +13,13 @@ export const useWETH = (amountIn: number, tokenOne: Token) => {
     value: fromReadableAmount(amountIn, WETH_TOKEN.decimals) as bigint
   })
 
-  // console.log({amountIn: fromReadableAmount(amountIn, tokenOne.decimals)})
+  console.log(fromReadableAmount(amountIn, WETH_TOKEN.decimals))
 
   const { data: withdrawSimulation } = useSimulateContract({
       address: WETH_TOKEN.address as `0x${string}`,
       abi: ERC20_ABI,
       functionName: "withdraw",
-      args: [fromReadableAmount(amountIn, tokenOne.decimals)]
+      args: [fromReadableAmount(amountIn, decimals)]
     })
 
   const { writeContractAsync, error, data: hash } = useWriteContract()
@@ -29,6 +29,7 @@ export const useWETH = (amountIn: number, tokenOne: Token) => {
   })
 
   const deposit = async () => {
+    console.log("Deposit WETH")
     await writeContractAsync(depositSimulation!.request)
   }
 
