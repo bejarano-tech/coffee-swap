@@ -18,7 +18,7 @@ import {
 } from "./ui/select";
 import { Label } from "./ui/label";
 import { Button } from "./ui/button";
-import { adjustNumber, formatNumber } from "@/lib/format";
+import { adjustNumber, formatNumber, localeStringToFloatString } from "@/lib/format";
 import {
   BLANK_TOKEN,
   ExtendedToken,
@@ -209,12 +209,12 @@ export const DexAggregator = () => {
     withdraw,
     error: depositError,
     isSuccess: isDeposited,
-  } = useWETH();
+  } = useWETH(parseFloat(localeStringToFloatString(amount as string) || "0"));
 
   const handleSwap = useCallback(async () => {
     setTrade(getTrade());
     // if(fromToken.address != WETH_TOKEN.address){
-      await deposit(parseFloat(amount || "0"))
+      await deposit()
     // }
 
     await approve({

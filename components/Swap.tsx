@@ -13,7 +13,7 @@ import { Button } from "./ui/button";
 import tokenList from "@/lib/tokenList.json";
 import { Modal } from "./Modal";
 import { getAllowance, getApprove, getPrices } from "@/app/actions";
-import { adjustNumber, formatNumber } from "@/lib/format";
+import { adjustNumber, formatNumber, localeStringToFloatString } from "@/lib/format";
 import { useAccount, useSendTransaction } from "wagmi";
 import { parseUnits } from "ethers";
 import tokensList from "@/lib/tokenList.json";
@@ -65,7 +65,7 @@ export const Swap = () => {
     withdraw,
     error: depositError,
     isSuccess: isDeposited,
-  } = useWETH();
+  } = useWETH(parseFloat(localeStringToFloatString(tokenOneAmount as string) || "0"), tokenOne);
   const { tokenOneBalance, tokenTwoBalance } = useBalances(
     tokenOne,
     tokenTwo
@@ -110,7 +110,7 @@ export const Swap = () => {
       const prices = await getPrices(
         tokenOne,
         tokenTwo,
-        e.target.value as string,
+        localeStringToFloatString(e.target.value as string) as string,
         tokenOne.decimals
       );
       setTokenTwoAmount(
@@ -172,7 +172,7 @@ export const Swap = () => {
           args: [
             SWAP_ROUTER_ADDRESS,
             fromReadableAmount(
-              parseFloat(tokenOneAmount || "0"),
+              parseFloat(localeStringToFloatString(tokenOneAmount as string) || "0"),
               tokenOne.decimals
             ).toString(),
           ],
@@ -194,11 +194,11 @@ export const Swap = () => {
         console.log("Nothing to do");
         return;
       } else if (tokenOne.symbol === "ETH" && tokenTwo.symbol === "WETH") {
-        await deposit(parseFloat(tokenOneAmount || "0"))
+        await deposit()
         console.log("Deposit to WETH");
       } else if (tokenOne.symbol === "ETH") {
         if (tokenTwo.symbol !== "WETH") {
-          await deposit(parseFloat(tokenOneAmount || "0"))
+          await deposit()
           console.log("Deposit to WETH");
           handleApprove(allowance as number);
           console.log("Swap from WETH");
@@ -207,8 +207,8 @@ export const Swap = () => {
         console.log("Nothing to do");
         return;
       } else if (tokenOne.symbol === "WETH" && tokenTwo.symbol === "ETH") {
-        handleApprove(allowance as number);
-        console.log("Withdraw");
+        await handleApprove(allowance as number);
+        await handleWithdraw()
       } else if (tokenOne.symbol === "WETH") {
         if (tokenTwo.symbol !== "ETH") {
           handleApprove(allowance as number);
@@ -228,8 +228,17 @@ export const Swap = () => {
     });
   };
 
+  const handleWithdraw = async () => {
+    console.log("Withdraw")
+    await withdraw()
+    try {
+    } catch (error) {
+      console.log(error);
+    }
+  }
+
   const hasBalance = () => {
-    return parseFloat(toReadableAmount(tokenOneBalance as number, tokenOne.decimals)) < parseFloat(tokenOneAmount as string)
+    return parseFloat(toReadableAmount(tokenOneBalance as number, tokenOne.decimals)) < parseFloat(localeStringToFloatString(tokenOneAmount as string) as string)
   }
 
   useEffect(() => {

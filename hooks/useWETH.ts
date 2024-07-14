@@ -1,33 +1,41 @@
 import { ERC20_ABI } from "@/blockchain/abis/ERC_20";
 import { WETH_TOKEN } from "@/lib/constants";
 import { fromReadableAmount } from "@/lib/conversion";
-import { useWaitForTransactionReceipt, useWriteContract } from "wagmi";
+import { useSimulateContract, useWaitForTransactionReceipt, useWriteContract } from "wagmi";
+import { Token } from '../components/Swap';
 
-export const useWETH = () => {
+export const useWETH = (amountIn: number, tokenOne: Token) => {
+
+  const { data: depositSimulation } = useSimulateContract({
+    address: WETH_TOKEN.address as `0x${string}`,
+    abi: ERC20_ABI,
+    functionName: "deposit",
+    value: fromReadableAmount(amountIn, WETH_TOKEN.decimals) as bigint
+  })
+
+  // console.log({amountIn: fromReadableAmount(amountIn, tokenOne.decimals)})
+
+  const { data: withdrawSimulation } = useSimulateContract({
+      address: WETH_TOKEN.address as `0x${string}`,
+      abi: ERC20_ABI,
+      functionName: "withdraw",
+      args: [fromReadableAmount(amountIn, tokenOne.decimals)]
+    })
+
   const { writeContractAsync, error, data: hash } = useWriteContract()
   const { isLoading: isConfirming, isSuccess: isConfirmed } =
   useWaitForTransactionReceipt({
     hash,
   })
 
-  const deposit = async (amountIn: number) => {
-    await writeContractAsync({
-      address: WETH_TOKEN.address as `0x${string}`,
-      abi: ERC20_ABI,
-      functionName: "deposit",
-      value: fromReadableAmount(amountIn, WETH_TOKEN.decimals) as bigint
-    })
+  const deposit = async () => {
+    await writeContractAsync(depositSimulation!.request)
   }
 
-  const withdraw = async (amountIn: number) => {
-    console.log({error})
-    await writeContractAsync({
-      address: WETH_TOKEN.address as `0x${string}`,
-      abi: ERC20_ABI,
-      functionName: "withdraw",
-      args: [BigInt(amountIn)]
-    })
+  const withdraw = async () => {
+    await writeContractAsync(withdrawSimulation!.request)
   }
+
 
   return { deposit, withdraw, isConfirming, isSuccess: isConfirmed, error }
 };
