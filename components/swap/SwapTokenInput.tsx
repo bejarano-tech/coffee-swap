@@ -13,7 +13,8 @@ interface SwapTokenInputProps {
   openModal: (asset: number) => void,
   balance: number,
   token: Token,
-  index: number
+  index: number,
+  disabled?: boolean
 }
 
 export const SwapTokenInput = ({
@@ -22,7 +23,8 @@ export const SwapTokenInput = ({
   openModal,
   balance,
   token,
-  index
+  index,
+  disabled
 }: SwapTokenInputProps) => {
   return (
     <div className="relative">
@@ -31,6 +33,7 @@ export const SwapTokenInput = ({
         value={amount}
         placeholder="0"
         onChange={onChange}
+        disabled={disabled}
       />
       <div
         id="tokenOne"

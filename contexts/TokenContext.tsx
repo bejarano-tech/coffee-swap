@@ -4,6 +4,7 @@ import { useAccount } from "wagmi";
 import { getPrices } from "@/app/actions";
 import { localeStringToFloatString, adjustNumber } from "@/lib/format";
 import { Token } from '@/components/swap/SwapBox';
+import { toReadableAmount } from "@/lib/conversion";
 
 type TokensByChainId = {
   [key: string]: Token[];
@@ -72,9 +73,7 @@ export const TokenProvider: React.FC<{ children: React.ReactNode }> = ({ childre
       );
       setPrices(prices)
       setTokenTwoAmount(
-        adjustNumber(prices.bestPrice, tokenTwo.decimals).toLocaleString(
-          "en-US"
-        )
+        adjustNumber(tokenOne, tokenTwo, prices.bestPrice, tokenTwo.decimals)
       );
     });
   };

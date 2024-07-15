@@ -137,8 +137,6 @@ export const getPrices = async (
 
   const bestPrice = Math.max(uniSwapPrice, sushiSwapPrice);
 
-  console.log({uniSwapPrice, sushiSwapPrice, bestPrice})
-
   let bestDex;
 
   if (bestPrice === uniSwapPrice) {

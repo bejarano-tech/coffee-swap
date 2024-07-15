@@ -77,6 +77,7 @@ export const SwapBox = () => {
               balance={tokenTwoBalance as number}
               token={tokenTwo}
               index={2}
+              disabled={true}
             />
           </div>
           <p>

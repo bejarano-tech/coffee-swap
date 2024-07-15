@@ -15,9 +15,6 @@ export const Navbar = () => {
           <Link href={'/'}>
             <Button className='ms-4 text-white' variant={'link'}>Swap</Button>
           </Link>
-          <Link href={'/tokens'}>
-            <Button className='text-white' variant={'link'}>Tokens</Button>
-          </Link>
         </div>
         <ConnectButton />
       </div>
