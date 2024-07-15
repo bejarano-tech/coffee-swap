@@ -8,6 +8,7 @@ export const SwapSwitchTokensButton = ({switchTokens}: SwapSwitchTokensButtonPro
   return (
     <div className="flex justify-center my-4">
       <div
+        data-testid="token-button"
         onClick={switchTokens}
         className="rounded-full bg-slate-500 p-1 hover:cursor-pointer"
       >

@@ -36,6 +36,7 @@ export const SwapTokenInput = ({
         disabled={disabled}
       />
       <div
+        data-testid="token-selector"
         id="tokenOne"
         onClick={() => openModal(index)}
         className=" bg-slate-500 hover:cursor-pointer rounded-full p-2 absolute right-4 top-1/2 transform -translate-y-1/2 flex items-center space-x-2"
@@ -46,8 +47,7 @@ export const SwapTokenInput = ({
       </div>
       <div className="mt-1 me-1 absolute right-0 flex justify-end">
         <span className="text-right text-slate-400">
-          {token.symbol} Balance:{" "}
-          {parseFloat(toReadableAmount(balance as number, token.decimals))}
+        {`${token.symbol} Balance: ${parseFloat(toReadableAmount(balance as number, token.decimals))}`}
         </span>
       </div>
     </div>
