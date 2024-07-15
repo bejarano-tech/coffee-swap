@@ -23,6 +23,9 @@ export const useCreateTrade = (
 
   const getTrade = () => {
     try {
+      if(!data){
+        return null
+      }
       const abiCoder = AbiCoder.defaultAbiCoder();
       const decoded = abiCoder.decode(["uint256"], data?.data as `0x${string}`);
 
