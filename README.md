@@ -1,36 +1,76 @@
-This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
+# CoffeeSwap
 
-## Getting Started
+This project is a DEX Aggregator developed in React with Next.js 14, allowing trades on SushiSwap and UniSwap DEX according to the best available price.
 
-First, run the development server:
+## Features
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+- **DEX Integration**: Supports SushiSwap and UniSwap as DEX to fetch the best prices.
+- **Best Price Trading**: Utilizes WAGMI and VIEM to compare and execute trades on the DEX with the best available price.
+- **Responsive User Interface**: Developed using VIEM with optimized styles using Shadcdn and tailwind for an enhanced user experience.
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Requirements
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+- Node.js 14 or higher
+- React.js
+- Next.js 14
+- Wagmi
+- VIEM
+- Shadcdn
+- Tailwind
 
-This project uses [`next/font`](https://nextjs.org/docs/basic-features/font-optimization) to automatically optimize and load Inter, a custom Google Font.
+## Installation
 
-## Learn More
+1. Clone the repository:
 
-To learn more about Next.js, take a look at the following resources:
+  ```bash
+    git clone https://github.com/bejarano-tech/coffee-swap.git
+    cd coffee-swap
+  ```
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+2. Install dependencies:
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
+  ```bash
+    npm install
+  ```
 
-## Deploy on Vercel
+3. Set up environment variables:
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+Copy a .env.example file in the root of the project and configure necessary environment variables. Save in a .env.local file
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.
+  ```bash
+    NEXTAUTH_URL=http://localhost:3000
+    NEXTAUTH_SECRET=
+    NEXT_PUBLIC_ENABLE_TESTNETS=true
+    NEXT_PUBLIC_ENABLE_HARDHAT=true // only in development
+  ```
+
+## Usage
+To start the project in development mode:
+
+  ```bash
+    npm run dev
+  ```
+
+## Using Foundry and Anvil
+
+In order to develop safely you can use a blockchain fork.
+
+There are several developer tools to fork Mainnet. Anvil by foundry is a newcomer that's fast and easy to setup. This guide focuses on Anvil.
+
+As a first step, follow the installation guide in the foundry book.
+
+Once you have done that, you will be able to fork Mainnet straight away. Run the below command in your terminal:
+
+Make sure that you:
+
+- Replace your API Key (get one by heading to Chainnodes)
+Replace the block number with a recent one, check Etherscan for that
+
+- If you fork a non-Ethereum Mainnet chain, check Chainlist for the correct chain id and replace both occurrences in the command below
+
+- set `NEXT_PUBLIC_ENABLE_HARDHAT=true` in development in order to show hardhat as a valid network
+
+  ```bash
+    anvil --fork-url https://mainnet.chainnodes.org/api_key --fork-block-number 17480237 --fork-chain-id 1 --chain-id 1
+  ```
+
