@@ -2,7 +2,7 @@ import { ERC20_ABI } from "@/blockchain/abis/ERC_20";
 import { WETH_TOKEN } from "@/lib/constants";
 import { fromReadableAmount } from "@/lib/conversion";
 import { useSimulateContract, useWaitForTransactionReceipt, useWriteContract } from "wagmi";
-import { Token } from '../components/Swap';
+import { Token } from '../components/swap/SwapBox';
 
 export const useWETH = (amountIn: number, decimals: number) => {
 

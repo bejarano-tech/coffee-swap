@@ -1,7 +1,7 @@
-import { Swap } from "@/components/Swap";
+import { SwapBox } from "@/components/swap/SwapBox";
 
 export default async function Home() {
   return (
-    <Swap />
+    <SwapBox />
   );
 }

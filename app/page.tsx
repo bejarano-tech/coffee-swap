@@ -1,10 +1,8 @@
-// import { DexAggregator } from "@/components/DexAggregator";
-import { Swap } from "@/components/Swap";
+import { SwapBox } from "@/components/swap/SwapBox";
 
 export default async function Home() {
 
   return (
-    // <DexAggregator />
-    <Swap />
+    <SwapBox />
   );
 }

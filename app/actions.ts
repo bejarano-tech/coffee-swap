@@ -13,7 +13,7 @@ import { FeeAmount } from "@uniswap/v3-sdk";
 import { fromReadableAmount } from "@/lib/conversion";
 import { SushiSwapRouterV2Abi } from "@/blockchain/abis/SushiSwapRouterV2Abi";
 import { ERC20_ABI } from "@/blockchain/abis/ERC_20";
-import { Token } from '../components/Swap';
+import { Token } from '../components/swap/SwapBox';
 
 const publicClient = createPublicClient({
   chain: mainnet,

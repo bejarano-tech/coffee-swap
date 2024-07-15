@@ -1,6 +1,6 @@
 import { ERC20_ABI } from "@/blockchain/abis/ERC_20"
 import { useAccount, useReadContracts, useBalance } from 'wagmi';
-import { Token } from '../components/Swap';
+import { Token } from '../components/swap/SwapBox';
 import { ETH_TOKEN } from "@/lib/constants";
 
 export const useBalances = (tokenOne: Token, tokenTwo: Token) => {
