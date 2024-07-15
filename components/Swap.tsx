@@ -19,7 +19,7 @@ import { parseUnits } from "ethers";
 import tokensList from "@/lib/tokenList.json";
 import { useApprove } from "@/hooks/useApprove";
 import { ERC20_ABI } from "@/blockchain/abis/ERC_20";
-import { ETH_TOKEN, SWAP_ROUTER_ADDRESS, WETH_TOKEN } from "@/lib/constants";
+import { ETH_TOKEN, SUSHISWAP_ROUTER_ADDRESS, UNISWAP_SWAP_ROUTER_ADDRESS, WETH_TOKEN } from "@/lib/constants";
 import { fromReadableAmount, toReadableAmount } from "@/lib/conversion";
 import { useBalances } from "@/hooks/useBalances";
 import { useWETH } from "@/hooks/useWETH";
@@ -74,7 +74,8 @@ export const Swap = () => {
     tokenTwo
   );
   const [error, setError] = useState<Error| null>(null)
-  const { swap } = useSwap(tokenOne, tokenTwo, tokenOneAmount as string)
+  const [bestDex, setBestDex] = useState(""); 
+  const { uniswapSwap, sushiswapSwap } = useSwap(tokenOne, tokenTwo, tokenOneAmount as string)
   const handleSlippageChange = (value: SetStateAction<string>) => {
     setSlippage(value);
   };
@@ -116,6 +117,7 @@ export const Swap = () => {
         localeStringToFloatString(e.target.value as string) as string,
         tokenOne.decimals
       );
+      setBestDex(prices.bestDex as string)
       setTokenTwoAmount(
         adjustNumber(prices.bestPrice, tokenTwo.decimals).toLocaleString(
           "en-US"
@@ -173,7 +175,7 @@ export const Swap = () => {
           abi: ERC20_ABI,
           functionName: "approve",
           args: [
-            SWAP_ROUTER_ADDRESS,
+            bestDex == 'uniswap' ? UNISWAP_SWAP_ROUTER_ADDRESS : SUSHISWAP_ROUTER_ADDRESS,
             fromReadableAmount(
               parseFloat(localeStringToFloatString(tokenOneAmount as string) || "0"),
               tokenOne.decimals
@@ -186,12 +188,21 @@ export const Swap = () => {
     }
   }
 
-  const handleSwap = () => {
+  const handleSwap = async () => {
+    if (bestDex == 'uniswap') {
+      await uniswapSwap()
+    }else {
+      await sushiswapSwap()
+    }
+  }
+
+  const handleSwapFlow = () => {
     startTransition(async () => {
       const allowance = await getAllowance(
         chainId as number,
         (tokenOne.symbol == ETH_TOKEN.symbol ? WETH_TOKEN : tokenOne).address,
-        address as string
+        address as string,
+        bestDex
       );
       if (tokenOne.symbol === "ETH" && tokenTwo.symbol === "ETH") {
         console.log("Nothing to do");
@@ -202,7 +213,7 @@ export const Swap = () => {
         if (tokenTwo.symbol !== "WETH") {
           await deposit()
           await handleApprove(allowance as number);
-          await swap()
+          await handleSwap()
         }
       } else if (tokenOne.symbol === "WETH" && tokenTwo.symbol === "WETH") {
         console.log("Nothing to do");
@@ -213,18 +224,18 @@ export const Swap = () => {
       } else if (tokenOne.symbol === "WETH") {
         if (tokenTwo.symbol !== "ETH") {
           await handleApprove(allowance as number);
-          await swap()
+          await handleSwap()
         }
       } else if (tokenTwo.symbol === "ETH") {
         await handleApprove(allowance as number);
-        await swap()
+        await handleSwap()
         await handleWithdraw()
       } else if (tokenTwo.symbol === "WETH") {
         await handleApprove(allowance as number);
-        await swap()
+        await handleSwap()
       } else {
         await handleApprove(allowance as number);
-        await swap()
+        await handleSwap()
       }
     });
   };
@@ -363,10 +374,11 @@ export const Swap = () => {
               </span>
             </div>
           </div>
+          <p>{bestDex ? bestDex == 'uniswap' ? 'Uniswap' : 'Sushiswap' : null }</p>
           {error ? <div className="my-4 bg-red-400 p-4 rounded"><p>{error.title}</p><p>{error.description}</p></div> : null}
           <div>
             <Button
-              onClick={handleSwap}
+              onClick={handleSwapFlow}
               disabled={
                 isPending || !tokenOneAmount || !isConnected || isApproving || hasBalance() 
               }

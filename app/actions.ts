@@ -3,7 +3,7 @@ import {
   ETH_TOKEN,
   QUOTER_CONTRACT_ADDRESS_V2,
   SUSHISWAP_ROUTER_ADDRESS,
-  SWAP_ROUTER_ADDRESS,
+  UNISWAP_SWAP_ROUTER_ADDRESS,
   WETH_TOKEN,
 } from "@/lib/constants";
 import { createPublicClient, http } from "viem";
@@ -135,22 +135,43 @@ export const getPrices = async (
 
   const bestPrice = Math.max(uniSwapPrice, sushiSwapPrice);
 
-  return { uniSwapPrice, sushiSwapPrice, bestPrice };
+  console.log({uniSwapPrice, sushiSwapPrice, bestPrice})
+
+  let bestDex;
+
+  if (bestPrice === uniSwapPrice) {
+    bestDex = "uniswap";
+  } else {
+    bestDex = "sushiswap";
+  }
+
+  return { uniSwapPrice, sushiSwapPrice, bestPrice, bestDex };
 };
 
 export const getAllowance = async (
   chain: number,
   tokenAddress: string,
-  walletAddress: string
+  walletAddress: string,
+  dex: string
 ) => {
   try {
-    const uniSwapQuote = await publicClient.readContract({
-      address: tokenAddress as `0x${string}`,
-      abi: ERC20_ABI,
-      functionName: "allowance",
-      args: [walletAddress, SWAP_ROUTER_ADDRESS],
-    });
-    return Number(uniSwapQuote);
+    let allowance;
+    if(dex === 'uniswap')
+      allowance = await publicClient.readContract({
+        address: tokenAddress as `0x${string}`,
+        abi: ERC20_ABI,
+        functionName: "allowance",
+        args: [walletAddress, UNISWAP_SWAP_ROUTER_ADDRESS],
+      });
+    else {
+      allowance = await publicClient.readContract({
+        address: tokenAddress as `0x${string}`,
+        abi: ERC20_ABI,
+        functionName: "allowance",
+        args: [walletAddress, SUSHISWAP_ROUTER_ADDRESS],
+      });
+    }
+    return Number(allowance);
   } catch (error) {
     console.error(error);
     return null;

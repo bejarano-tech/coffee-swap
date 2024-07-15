@@ -13,8 +13,6 @@ export const useWETH = (amountIn: number, decimals: number) => {
     value: fromReadableAmount(amountIn, WETH_TOKEN.decimals) as bigint
   })
 
-  console.log(fromReadableAmount(amountIn, WETH_TOKEN.decimals))
-
   const { data: withdrawSimulation } = useSimulateContract({
       address: WETH_TOKEN.address as `0x${string}`,
       abi: ERC20_ABI,

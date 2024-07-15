@@ -1,11 +1,13 @@
-import { useAccount } from "wagmi";
+import { useAccount, useSimulateContract, useWriteContract } from "wagmi";
 import { useCreateRoute } from "./useCreateRoute";
 import { useCreateTrade } from "./useCreateTrade";
 import { Token as SwapToken} from "@/components/Swap";
 import { Token } from "@uniswap/sdk-core";
 import { useExecuteTrade } from "./useExecuteTrade";
 import { useCallback } from "react";
-import { ETH_TOKEN, WETH_TOKEN } from "@/lib/constants";
+import { ETH_TOKEN, SUSHISWAP_ROUTER_ADDRESS, WETH_TOKEN } from "@/lib/constants";
+import { SushiSwapRouterV2Abi } from "@/blockchain/abis/SushiSwapRouterV2Abi";
+import { fromReadableAmount } from "@/lib/conversion";
 
 export const useSwap = (tokenOne: SwapToken, tokenTwo: SwapToken, amountIn: string) => {
   const { chainId, address } = useAccount()
@@ -29,8 +31,6 @@ export const useSwap = (tokenOne: SwapToken, tokenTwo: SwapToken, amountIn: stri
     token1Object.name
   )
 
-  console.log({token0, token1})
-
   const { calldata, swapRoute } = useCreateRoute(
     token0,
     token1,
@@ -46,11 +46,27 @@ export const useSwap = (tokenOne: SwapToken, tokenTwo: SwapToken, amountIn: stri
 
   const trade = getTrade()
 
-  const { executeTrade } = useExecuteTrade(trade, address);
+  const { executeTrade: executeUniswapTrade } = useExecuteTrade(trade, address);
 
-  const swap = async () => {
-    await executeTrade()
+  const path = [token0.address, token1.address]
+  const deadline = Math.floor(Date.now() / 1000) + 60 * 20; // 20 minutos a partir de ahora
+
+  const { data: swapSimulation } = useSimulateContract({
+    address: SUSHISWAP_ROUTER_ADDRESS as `0x${string}`,
+    abi: SushiSwapRouterV2Abi,
+    functionName: "swapExactTokensForTokens",
+    args: [fromReadableAmount(parseFloat(amountIn || "0"), token0.decimals), 0, path, address, deadline],
+  })
+
+  const { writeContractAsync, error, data: hash } = useWriteContract()
+
+  const uniswapSwap = async () => {
+    await executeUniswapTrade()
   }
 
-  return { swap }
+  const sushiswapSwap = async () => {
+    await writeContractAsync(swapSimulation!.request)
+  }
+
+  return { uniswapSwap, sushiswapSwap }
 }
