@@ -2,15 +2,10 @@
 import { Settings } from "lucide-react";
 import { Popover, PopoverContent, PopoverTrigger } from "../ui/popover";
 import { ToggleGroup, ToggleGroupItem } from "../ui/toggle-group";
-import { SetStateAction, useState } from "react";
+import { useSlippageContext } from "@/contexts/SlippageContext";
 
 export const SwapSettings = () => {
-  const [slippage, setSlippage] = useState("2.5");
-
-  const handleSlippageChange = (value: SetStateAction<string>) => {
-    console.log(value)
-    setSlippage(value);
-  };
+  const { slippage, handleSlippageChange } = useSlippageContext()
 
   return (
     <Popover>

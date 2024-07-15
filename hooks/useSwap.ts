@@ -1,13 +1,13 @@
 import { useAccount, useSimulateContract, useWriteContract } from "wagmi";
 import { useCreateRoute } from "./useCreateRoute";
 import { useCreateTrade } from "./useCreateTrade";
-import { Token as SwapToken} from "@/components/Swap";
 import { Token } from "@uniswap/sdk-core";
 import { useExecuteTrade } from "./useExecuteTrade";
-import { useCallback } from "react";
 import { ETH_TOKEN, SUSHISWAP_ROUTER_ADDRESS, WETH_TOKEN } from "@/lib/constants";
 import { SushiSwapRouterV2Abi } from "@/blockchain/abis/SushiSwapRouterV2Abi";
 import { fromReadableAmount } from "@/lib/conversion";
+import { Token as SwapToken } from '@/components/swap/SwapBox';
+import { useCallback } from "react";
 
 export const useSwap = (tokenOne: SwapToken, tokenTwo: SwapToken, amountIn: string) => {
   const { chainId, address } = useAccount()
@@ -51,22 +51,30 @@ export const useSwap = (tokenOne: SwapToken, tokenTwo: SwapToken, amountIn: stri
   const path = [token0.address, token1.address]
   const deadline = Math.floor(Date.now() / 1000) + 60 * 20; // 20 minutos a partir de ahora
 
-  const { data: swapSimulation } = useSimulateContract({
+  const { isSuccess, data: swapSimulation, isLoading: isLoadingSimulate } = useSimulateContract({
     address: SUSHISWAP_ROUTER_ADDRESS as `0x${string}`,
     abi: SushiSwapRouterV2Abi,
     functionName: "swapExactTokensForTokens",
     args: [fromReadableAmount(parseFloat(amountIn || "0"), token0.decimals), 0, path, address, deadline],
   })
 
-  const { writeContractAsync, error, data: hash } = useWriteContract()
+  const { isPending: isWriteLoading, writeContractAsync, error, data: hash, } = useWriteContract()
 
   const uniswapSwap = async () => {
     await executeUniswapTrade()
   }
 
-  const sushiswapSwap = async () => {
-    await writeContractAsync(swapSimulation!.request)
-  }
+  const sushiswapSwap = useCallback(async () => {
+    if (swapSimulation?.request) {
+      await writeContractAsync(swapSimulation!.request)
+      if (isSuccess) {
+        console.log('approve went well')
+      }
+      else {
+       // error
+      }
+    }
+    }, [swapSimulation?.request, isSuccess])
 
   return { uniswapSwap, sushiswapSwap }
 }

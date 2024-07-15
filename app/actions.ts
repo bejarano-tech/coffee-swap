@@ -14,6 +14,7 @@ import { fromReadableAmount } from "@/lib/conversion";
 import { SushiSwapRouterV2Abi } from "@/blockchain/abis/SushiSwapRouterV2Abi";
 import { ERC20_ABI } from "@/blockchain/abis/ERC_20";
 import { Token } from '../components/swap/SwapBox';
+import { Prices } from "@/contexts/TokenContext";
 
 const publicClient = createPublicClient({
   chain: mainnet,
@@ -95,7 +96,8 @@ export const getPrices = async (
       bestPrice: Number(
         fromReadableAmount(parseFloat(amountIn || "0"), decimals)
       ),
-    };
+      bestDex: ""
+    } as Prices;
   }
 
   if(tokenOne.symbol == ETH_TOKEN.symbol) {
@@ -145,7 +147,7 @@ export const getPrices = async (
     bestDex = "sushiswap";
   }
 
-  return { uniSwapPrice, sushiSwapPrice, bestPrice, bestDex };
+  return { uniSwapPrice, sushiSwapPrice, bestPrice, bestDex } as Prices;
 };
 
 export const getAllowance = async (
