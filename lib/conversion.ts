@@ -1,5 +1,5 @@
 import { BigNumberish, formatUnits, parseUnits } from 'ethers'
-
+import Big from 'big.js';
 export const READABLE_FORM_LEN = 10
 
 export function fromReadableAmount(
@@ -16,6 +16,6 @@ export function toReadableAmount(rawAmount: number, decimals: number): string {
 }
 
 const roundToDecimals = (value: string, decimals: number): string => {
-  const factor = Math.pow(10, decimals);
-  return (Math.floor(parseFloat(value) * factor) / factor).toFixed(decimals);
+  const bigValue = new Big(value);
+  return bigValue.toFixed(decimals);
 };

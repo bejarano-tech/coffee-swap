@@ -1,10 +1,15 @@
-import React, { createContext, useContext, useState, useEffect, startTransition, SetStateAction } from "react";
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  SetStateAction,
+} from "react";
 import tokensList from "@/lib/tokenList.json";
 import { useAccount } from "wagmi";
-import { getPrices } from "@/app/actions";
 import { localeStringToFloatString, adjustNumber } from "@/lib/format";
-import { Token } from '@/components/swap/SwapBox';
-import { toReadableAmount } from "@/lib/conversion";
+import { Token } from "@/components/swap/SwapBox";
+import { useQuote } from "@/hooks/useQuote";
 
 type TokensByChainId = {
   [key: string]: Token[];
@@ -23,7 +28,9 @@ interface TokenContextType {
   setTokenTwoAmount: React.Dispatch<React.SetStateAction<string | undefined>>;
   prices: any;
   setPrices: React.Dispatch<React.SetStateAction<any>>;
-  changeAmount: (e: { target: { value: React.SetStateAction<string | undefined> } }) => void;
+  changeAmount: (e: {
+    target: { value: React.SetStateAction<string | undefined> };
+  }) => void;
   switchTokens: () => void;
   openModal: (asset: number) => void;
   modifyToken: (index: number) => void;
@@ -34,15 +41,19 @@ interface TokenContextType {
 }
 
 export interface Prices {
-  uniSwapPrice: number
-  sushiSwapPrice: number
-  bestPrice: number
+  uniSwapPrice: number;
+  sushiSwapPrice: number;
+  bestPrice: number;
+  isSushiQuoteLoading: boolean;
+  isUniswapQuoteLoading: boolean;
 }
 
 const TokenContext = createContext<TokenContextType | undefined>(undefined);
 
-export const TokenProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const { chainId } = useAccount()
+export const TokenProvider: React.FC<{ children: React.ReactNode }> = ({
+  children,
+}) => {
+  const { chainId } = useAccount();
 
   const [tokenOneAmount, setTokenOneAmount] = useState<string | undefined>(
     undefined
@@ -56,27 +67,32 @@ export const TokenProvider: React.FC<{ children: React.ReactNode }> = ({ childre
   const [isOpen, setIsOpen] = useState(false);
   const [changeToken, setChangeToken] = useState(1);
 
+  const quote = useQuote(
+    tokenOne,
+    tokenTwo,
+    localeStringToFloatString(tokenOneAmount as string) as string,
+    tokenOne.decimals
+  );
+
+  useEffect(() => {
+    if (tokenOneAmount === "" || tokenOneAmount === "0") {
+      setTokenTwoAmount("");
+      return;
+    }
+    setTokenTwoAmount(
+      adjustNumber(tokenOne, tokenTwo, quote?.bestPrice as number, tokenTwo.decimals)
+    );
+    setPrices(quote as Prices);
+
+  }, [tokenOneAmount, quote, tokenOne, tokenTwo]);
+
   const changeAmount = (e: {
     target: { value: SetStateAction<string | undefined> };
   }) => {
     setTokenOneAmount(e.target.value);
-    startTransition(async () => {
-      if (e.target.value == "" || e.target.value == "0") {
-        setTokenTwoAmount("")
-        return;
-      }
-      const prices = await getPrices(
-        tokenOne,
-        tokenTwo,
-        localeStringToFloatString(e.target.value as string) as string,
-        tokenOne.decimals
-      );
-      setPrices(prices)
-      setTokenTwoAmount(
-        adjustNumber(tokenOne, tokenTwo, prices.bestPrice, tokenTwo.decimals)
-      );
-    });
+    console.log({quote})
   };
+
   const switchTokens = () => {
     setPrices(null);
     setTokenOneAmount("");

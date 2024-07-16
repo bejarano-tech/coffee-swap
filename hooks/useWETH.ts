@@ -3,6 +3,7 @@ import { WETH_TOKEN } from "@/lib/constants";
 import { fromReadableAmount } from "@/lib/conversion";
 import { useSimulateContract, useWaitForTransactionReceipt, useWriteContract } from "wagmi";
 import { Token } from '../components/swap/SwapBox';
+import { useCallback } from "react";
 
 export const useWETH = (amountIn: number, decimals: number) => {
 
@@ -13,7 +14,7 @@ export const useWETH = (amountIn: number, decimals: number) => {
     value: fromReadableAmount(amountIn, WETH_TOKEN.decimals) as bigint
   })
 
-  const { data: withdrawSimulation } = useSimulateContract({
+  const { data: withdrawSimulation, isSuccess } = useSimulateContract({
       address: WETH_TOKEN.address as `0x${string}`,
       abi: ERC20_ABI,
       functionName: "withdraw",
@@ -27,14 +28,20 @@ export const useWETH = (amountIn: number, decimals: number) => {
   })
 
   const deposit = async () => {
-    console.log("Deposit WETH")
     await writeContractAsync(depositSimulation!.request)
   }
 
-  const withdraw = async () => {
-    await writeContractAsync(withdrawSimulation!.request)
-  }
-
+  const withdraw = useCallback(async () => {
+    if (withdrawSimulation?.request) {
+      await writeContractAsync(withdrawSimulation!.request)
+      if (isSuccess) {
+        console.log('approve went well')
+      }
+      else {
+        console.log("error withdrawing")
+      }
+    }
+    }, [withdrawSimulation?.request, isSuccess])
 
   return { deposit, withdraw, isConfirming, isSuccess: isConfirmed, error }
 };

@@ -72,82 +72,6 @@ export const handleSushiSwapQuote = async (
   return price;
 };
 
-export const getPrices = async (
-  tokenOne: Token,
-  tokenTwo: Token,
-  amountIn: string | undefined,
-  decimals: number
-) => {
-  if (
-    (tokenOne.symbol === ETH_TOKEN.symbol &&
-      tokenTwo.symbol === WETH_TOKEN.symbol) ||
-    (tokenOne.symbol === WETH_TOKEN.symbol &&
-      tokenTwo.symbol === ETH_TOKEN.symbol)
-  ) {
-
-
-    return {
-      uniSwapPrice: Number(
-        fromReadableAmount(parseFloat(amountIn || "0"), decimals)
-      ),
-      sushiSwapPrice: Number(
-        fromReadableAmount(parseFloat(amountIn || "0"), decimals)
-      ),
-      bestPrice: Number(
-        fromReadableAmount(parseFloat(amountIn || "0"), decimals)
-      ),
-      bestDex: ""
-    } as Prices;
-  }
-
-  if(tokenOne.symbol == ETH_TOKEN.symbol) {
-    tokenOne.address = WETH_TOKEN.address
-  }else if(tokenTwo.symbol == ETH_TOKEN.symbol){
-    tokenTwo.address = WETH_TOKEN.address
-  }
-  
-  const uniSwapQuote = (await publicClient.readContract({
-    address: QUOTER_CONTRACT_ADDRESS_V2,
-    abi: QuoterV2.abi,
-    functionName: "quoteExactInputSingle",
-    args: [
-      {
-        tokenIn: tokenOne.address,
-        tokenOut: tokenTwo.address,
-        fee: FeeAmount.MEDIUM,
-        amountIn: fromReadableAmount(parseFloat(amountIn || "0"), decimals),
-        sqrtPriceLimitX96: 0,
-      },
-    ],
-  })) as bigint[];
-
-  const sushiSwapQuote = (await publicClient.readContract({
-    abi: SushiSwapRouterV2Abi,
-    address: SUSHISWAP_ROUTER_ADDRESS,
-    functionName: "getAmountsOut",
-    args: [
-      fromReadableAmount(parseFloat(amountIn || "0"), decimals),
-      [tokenOne.address, tokenTwo.address],
-    ],
-  })) as bigint[];
-
-  const uniSwapPrice = Number(uniSwapQuote[0]);
-
-  const sushiSwapPrice = Number(sushiSwapQuote[1]);
-
-  const bestPrice = Math.max(uniSwapPrice, sushiSwapPrice);
-
-  let bestDex;
-
-  if (bestPrice === uniSwapPrice) {
-    bestDex = "uniswap";
-  } else {
-    bestDex = "sushiswap";
-  }
-
-  return { uniSwapPrice, sushiSwapPrice, bestPrice, bestDex } as Prices;
-};
-
 export const getAllowance = async (
   chain: number,
   tokenAddress: string,
@@ -178,24 +102,3 @@ export const getAllowance = async (
   }
 };
 
-export const getApprove = async (
-  chain: number,
-  tokenAddress: string,
-  amount: bigint
-) => {
-  const url = `https://api.1inch.dev/swap/v6.0/${chain}/approve/transaction?tokenAddress=${tokenAddress}&amount=${amount}`;
-
-  const config = {
-    headers: {
-      Authorization: `Bearer ${process.env.ONE_INCH_API_KEY}`,
-    },
-  };
-
-  try {
-    const response = await fetch(url, config);
-    return await response.json();
-  } catch (error) {
-    console.error(error);
-    return null;
-  }
-};

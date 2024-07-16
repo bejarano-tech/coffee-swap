@@ -88,17 +88,16 @@ export const SwapBox = () => {
               disabled={true}
             />
           </div>
-          <p>
-            {tokenOneAmount == "" || parseFloat(tokenOneAmount as string) == 0
-              ? null
-              : prices?.bestDex
-              ?  <div className={`${bestPriceBoxClass()} p-4 rounded mb-4`}><p>Best price found on: {prices?.bestDex == "uniswap" ? "Uniswap" : "Sushiswap"}</p></div>
-              : null}
-          </p>
+          {tokenOneAmount == "" || parseFloat(tokenOneAmount as string) == 0
+            ? null
+            : prices?.bestDex
+            ?  <div className={`${bestPriceBoxClass()} p-4 rounded mb-4`}><p>Best price found on: {prices?.bestDex == "uniswap" ? "Uniswap" : "Sushiswap"}</p></div>
+            : null}
           {error ? <SwapErrorMessage {...error} /> : null}
           <SwapButton
             handleSwap={handleSwap}
             disabled={
+
               isPending ||
               !tokenOneAmount ||
               !isConnected ||

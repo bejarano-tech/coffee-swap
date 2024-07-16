@@ -23,6 +23,7 @@
     "@tanstack/react-query-devtools": "^5.49.2",
     "@uniswap/sdk-core": "^5.3.1",
     "@uniswap/v3-sdk": "^3.13.1",
+    "big.js": "^6.2.1",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.1",
     "dotenv": "^16.4.5",
@@ -43,6 +44,7 @@
   },
   "devDependencies": {
     "@testing-library/react": "^16.0.0",
+    "@types/big.js": "^6.2.2",
     "@types/node": "^20",
     "@types/react": "^18",
     "@types/react-dom": "^18",
