@@ -28,18 +28,26 @@ export const useWETH = (amountIn: number, decimals: number) => {
   })
 
   const deposit = async () => {
-    await writeContractAsync(depositSimulation!.request)
+    try {
+      await writeContractAsync(depositSimulation!.request)
+    } catch (error) {
+      console.log(error)
+    }
   }
 
   const withdraw = useCallback(async () => {
-    if (withdrawSimulation?.request) {
-      await writeContractAsync(withdrawSimulation!.request)
-      if (isSuccess) {
-        console.log('approve went well')
-      }
-      else {
-        console.log("error withdrawing")
-      }
+    try {
+      if (withdrawSimulation?.request) {
+        await writeContractAsync(withdrawSimulation!.request)
+        if (isSuccess) {
+          console.log('approve went well')
+        }
+        else {
+          console.log("error withdrawing")
+        }
+      }      
+    } catch (error) {
+      console.log(error)
     }
     }, [withdrawSimulation?.request, isSuccess])
 

@@ -99,6 +99,7 @@ export const SwapProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
     };
     const swap = async () => {
+      if(!isApproved) return
       if (prices.bestDex == "uniswap") {
         await uniswapSwap();
       } else {
