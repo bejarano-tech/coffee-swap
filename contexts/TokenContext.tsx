@@ -88,7 +88,10 @@ export const TokenProvider: React.FC<{ children: React.ReactNode }> = ({
   const changeAmount = (e: {
     target: { value: SetStateAction<string | undefined> };
   }) => {
-    setTokenOneAmount(e.target.value);
+    const regex = /^\d*(\.\d*)?$/;
+    if(regex.test(e.target.value as string)){
+      setTokenOneAmount(e.target.value);
+    }
   };
 
   const switchTokens = () => {

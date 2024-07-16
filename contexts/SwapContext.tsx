@@ -63,7 +63,8 @@ export const SwapProvider: React.FC<{ children: React.ReactNode }> = ({ children
       tokenOne,
       tokenTwo,
       tokenOneAmount as string
-    );  
+    );
+
     const hasBalance = () => {
       return (
         parseFloat(
@@ -72,6 +73,7 @@ export const SwapProvider: React.FC<{ children: React.ReactNode }> = ({ children
         parseFloat(localeStringToFloatString(tokenOneAmount as string) as string)
       );
     };
+
     const handleApprove = async (allowance: number) => {
       if (allowance === 0) {
         console.log("Approve WETH");
@@ -98,6 +100,7 @@ export const SwapProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
       }
     };
+
     const swap = async () => {
       if(!isApproved) return
       if (prices.bestDex == "uniswap") {
@@ -106,6 +109,7 @@ export const SwapProvider: React.FC<{ children: React.ReactNode }> = ({ children
         await sushiswapSwap();
       }
     };
+
     const handleSwap = () => {
       startTransition(async () => {
         const allowance = await getAllowance(
@@ -150,6 +154,7 @@ export const SwapProvider: React.FC<{ children: React.ReactNode }> = ({ children
         refetchBalances()
       });
     };
+
     const handleWithdraw = async () => {
       console.log("Withdraw");
       await withdraw();
@@ -158,6 +163,7 @@ export const SwapProvider: React.FC<{ children: React.ReactNode }> = ({ children
         console.log(error);
       }
     };
+
     useEffect(() => {
       if (hasBalance()) {
         setError({
@@ -168,6 +174,7 @@ export const SwapProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setError(null);
       }
     }, [tokenOneBalance, tokenOneAmount]);
+
   return (
     <SwapContext.Provider
       value={{
