@@ -14,7 +14,7 @@ export const useExecuteTrade = (trade: Trade<Token, Token, TradeType.EXACT_INPUT
     recipient: address as string,
   }
 
-  if(trade){
+  if(trade && address){
     const { calldata, value } = SwapRouter.swapCallParameters([trade as Trade<Token, Token, TradeType.EXACT_INPUT>], options)
 
     tx = {
