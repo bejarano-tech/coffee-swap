@@ -5,7 +5,7 @@ import { ETH_TOKEN } from "@/lib/constants";
 
 export const useBalances = (tokenOne: Token, tokenTwo: Token) => {
   const { address } = useAccount()
-  const ethBalance = useBalance({address})
+  const { data: ethBalance, refetch: refetchEthBalance } = useBalance({address})
 
   const tokenOneContract = {
     address: tokenOne.address as `0x${string}`,
@@ -17,7 +17,7 @@ export const useBalances = (tokenOne: Token, tokenTwo: Token) => {
     abi: ERC20_ABI,
   } as const
 
-  const { data, refetch: refetchBalances } = useReadContracts({
+  const { data, refetch } = useReadContracts({
     contracts: [
       {
         ...tokenOneContract,
@@ -32,8 +32,13 @@ export const useBalances = (tokenOne: Token, tokenTwo: Token) => {
     ]
   })
 
-  const tokenOneBalance = (tokenOne.symbol == ETH_TOKEN.symbol) ? ethBalance.data?.value || 0 : data && data[0].result ? data[0].result : 0
-  const tokenTwoBalance = (tokenTwo.symbol == ETH_TOKEN.symbol) ? ethBalance.data?.value || 0 :data && data[1].result ? data[1].result : 0
+  const refetchBalances = () => {
+    refetchEthBalance()
+    refetch()
+  }
+
+  const tokenOneBalance = (tokenOne.symbol == ETH_TOKEN.symbol) ? ethBalance?.value || 0 : data && data[0].result ? data[0].result : 0
+  const tokenTwoBalance = (tokenTwo.symbol == ETH_TOKEN.symbol) ? ethBalance?.value || 0 :data && data[1].result ? data[1].result : 0
 
   return { tokenOneBalance, tokenTwoBalance, refetchBalances }
 }
