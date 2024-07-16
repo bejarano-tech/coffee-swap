@@ -71,6 +71,6 @@ Replace the block number with a recent one, check Etherscan for that
 - set `NEXT_PUBLIC_ENABLE_HARDHAT=true` in development in order to show hardhat as a valid network
 
   ```bash
-    anvil --fork-url https://mainnet.chainnodes.org/api_key --fork-block-number 17480237 --fork-chain-id 1 --chain-id 1
+  anvil --fork-url https://mainnet.chainnodes.org/ef0128ec-0740 -438d-b447-28226b3a8569 --fork-block-number 20290802 --fork-chain-id 1 --chain-id 12
   ```
 
