@@ -83,14 +83,12 @@ export const TokenProvider: React.FC<{ children: React.ReactNode }> = ({
       adjustNumber(tokenOne, tokenTwo, quote?.bestPrice as number, tokenTwo.decimals)
     );
     setPrices(quote as Prices);
-
-  }, [tokenOneAmount, quote, tokenOne, tokenTwo]);
+  }, [tokenOneAmount, quote.bestPrice, tokenOne, tokenTwo]);
 
   const changeAmount = (e: {
     target: { value: SetStateAction<string | undefined> };
   }) => {
     setTokenOneAmount(e.target.value);
-    console.log({quote})
   };
 
   const switchTokens = () => {

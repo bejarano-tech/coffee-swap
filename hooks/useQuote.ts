@@ -43,8 +43,6 @@ export const useQuote = (  tokenOne: Token,
       ],
   })
 
-  console.log({uniswapQuote, sushiswapQuote})
-
   if(uniswapQuote || sushiswapQuote){
     const uniSwapPrice = uniswapQuote ? Number((uniswapQuote as bigint[])[0]) : 0;
     const sushiSwapPrice = sushiswapQuote ? Number((sushiswapQuote as bigint[])[1]) : 0;
@@ -57,7 +55,6 @@ export const useQuote = (  tokenOne: Token,
     } else {
       bestDex = "sushiswap";
     }
-    console.log({bestDex})
 
     return { uniSwapPrice, sushiSwapPrice, bestPrice, bestDex, isSushiQuoteLoading, isUniswapQuoteLoading } as Prices;
   } else {

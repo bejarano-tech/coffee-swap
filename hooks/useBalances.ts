@@ -17,7 +17,7 @@ export const useBalances = (tokenOne: Token, tokenTwo: Token) => {
     abi: ERC20_ABI,
   } as const
 
-  const { data } = useReadContracts({
+  const { data, refetch: refetchBalances } = useReadContracts({
     contracts: [
       {
         ...tokenOneContract,
@@ -35,5 +35,5 @@ export const useBalances = (tokenOne: Token, tokenTwo: Token) => {
   const tokenOneBalance = (tokenOne.symbol == ETH_TOKEN.symbol) ? ethBalance.data?.value || 0 : data && data[0].result ? data[0].result : 0
   const tokenTwoBalance = (tokenTwo.symbol == ETH_TOKEN.symbol) ? ethBalance.data?.value || 0 :data && data[1].result ? data[1].result : 0
 
-  return { tokenOneBalance, tokenTwoBalance }
+  return { tokenOneBalance, tokenTwoBalance, refetchBalances }
 }

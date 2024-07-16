@@ -56,7 +56,7 @@ export const SwapProvider: React.FC<{ children: React.ReactNode }> = ({ children
       parseFloat(localeStringToFloatString(amountTwoWithdraw as string) || "0"),
       decimalsTwoWithdraw
     );
-    const { tokenOneBalance } = useBalances(tokenOne, tokenTwo);
+    const { tokenOneBalance, refetchBalances } = useBalances(tokenOne, tokenTwo);
     const [error, setError] = useState<Error | null>(null);
     const [isPending, startTransition] = useTransition();
     const { uniswapSwap, sushiswapSwap } = useSwap(
@@ -146,6 +146,7 @@ export const SwapProvider: React.FC<{ children: React.ReactNode }> = ({ children
           await handleApprove(allowance as number);
           await swap();
         }
+        refetchBalances()
       });
     };
     const handleWithdraw = async () => {
