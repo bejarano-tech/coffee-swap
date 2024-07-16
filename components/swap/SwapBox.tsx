@@ -49,6 +49,14 @@ export const SwapBox = () => {
   const { error, handleSwap, isPending, isApproving, isApproved, hasBalance } =
     useSwapContext();
 
+  const bestPriceBoxClass = () => {
+    if (prices?.bestDex === 'uniswap') {
+      return 'bg-pink-400'
+    }else{
+      return 'bg-purple-700'
+    }
+  }
+
   return (
     <main className="flex-grow flex items-center justify-center p-4">
       <SwapSelectTokenModal
@@ -84,9 +92,7 @@ export const SwapBox = () => {
             {tokenOneAmount == "" || parseFloat(tokenOneAmount as string) == 0
               ? null
               : prices?.bestDex
-              ? prices?.bestDex == "uniswap"
-                ? "Uniswap"
-                : "Sushiswap"
+              ?  <div className={`${bestPriceBoxClass()} p-4 rounded mb-4`}><p>Best price found on: {prices?.bestDex == "uniswap" ? "Uniswap" : "Sushiswap"}</p></div>
               : null}
           </p>
           {error ? <SwapErrorMessage {...error} /> : null}
