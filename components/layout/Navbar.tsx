@@ -10,7 +10,7 @@ export const Navbar = () => {
         <div className="flex items-center">
           <Link href={'/'} className='flex items-center'>
             <Image src={'/coffee-swap.svg'} width={40} height={40} alt={'CoffeSwap Logo'} />
-            <h1 className="ms-4 text-xl font-bold text-white">CoffeSwap</h1>
+            <h1 className="ms-4 text-xl font-bold text-white">CoffeeSwap</h1>
           </Link>
           <Link href={'/'}>
             <Button className='ms-4 text-white' variant={'link'}>Swap</Button>
