@@ -33,7 +33,7 @@ const SwapContext = createContext<SwapContextType | undefined>(undefined);
 export const SwapProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const { address, chainId } = useAccount();
   const { approve, isApproving, isApproved } = useApprove();
-  const { tokenOne, tokenTwo, tokenOneAmount, tokenTwoAmount, prices } = useTokenContext();
+  const { tokenOne, tokenTwo, tokenOneAmount, tokenTwoAmount, prices, setTokenOneAmount, setTokenTwoAmount } = useTokenContext();
 
   const amountTwoWithdraw =
     tokenOne.symbol != ETH_TOKEN.symbol &&
@@ -108,6 +108,8 @@ export const SwapProvider: React.FC<{ children: React.ReactNode }> = ({ children
       } else {
         await sushiswapSwap();
       }
+      setTokenOneAmount("0");
+      setTokenTwoAmount("0");
     };
 
     const handleSwap = () => {
